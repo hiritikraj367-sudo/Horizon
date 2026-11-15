@@ -20,3 +20,8 @@ th { background: #e8ede3; }
 td { border-top: 1px solid #e4e7df; }
 small { display: block; margin-top: .25rem; }
 .address { white-space: pre-line; overflow-wrap: anywhere; }
+.payment-settings { margin-bottom: 1.25rem; padding: 1rem; border: 1px solid #dbded1; border-radius: .55rem; background: #fff; }
+.payment-settings summary { cursor: pointer; font-weight: 700; }
+.settings-form { display: grid; gap: .6rem; max-width: 29rem; }
+.settings-form small { margin-bottom: .4rem; }
+.settings-form button { justify-self: start; }

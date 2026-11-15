@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
 
+require_once __DIR__ . '/cashfree-settings.php';
+
 const PRICES = ['cod' => 239, 'cashfree' => 200];
 
 function escape(string $value): string
@@ -44,14 +46,14 @@ function orderDatabase(): PDO
 
 function cashfreeEnabled(): bool
 {
-    return (bool) (getenv('CASHFREE_CLIENT_ID') && getenv('CASHFREE_CLIENT_SECRET')
-        && preg_match('~^https://[^/?#]+(?:/[^?#]*)?$~', getenv('STORE_URL') ?: '')
+    return (bool) (cashfreeSettings()['client_id'] && cashfreeSettings()['secret']
+        && cashfreeStoreUrlValid(cashfreeSettings()['store_url'])
         && function_exists('curl_init'));
 }
 
 function cashfreeMode(): string
 {
-    return getenv('CASHFREE_MODE') === 'production' ? 'production' : 'sandbox';
+    return cashfreeSettings()['mode'];
 }
 
 function cashfreeRequest(string $endpoint, ?array $body = null): array
@@ -67,8 +69,8 @@ function cashfreeRequest(string $endpoint, ?array $body = null): array
         CURLOPT_TIMEOUT => 15,
         CURLOPT_HTTPHEADER => [
             'Content-Type: application/json', 'x-api-version: 2025-01-01',
-            'x-client-id: ' . getenv('CASHFREE_CLIENT_ID'),
-            'x-client-secret: ' . getenv('CASHFREE_CLIENT_SECRET'),
+            'x-client-id: ' . cashfreeSettings()['client_id'],
+            'x-client-secret: ' . cashfreeSettings()['secret'],
         ],
     ]);
     if ($body !== null) {

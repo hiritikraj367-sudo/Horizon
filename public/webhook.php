@@ -9,7 +9,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !cashfreeEnabled()) {
 $raw = file_get_contents('php://input');
 $timestamp = $_SERVER['HTTP_X_WEBHOOK_TIMESTAMP'] ?? '';
 $signature = $_SERVER['HTTP_X_WEBHOOK_SIGNATURE'] ?? '';
-$expected = base64_encode(hash_hmac('sha256', $timestamp . $raw, getenv('CASHFREE_CLIENT_SECRET'), true));
+$expected = base64_encode(hash_hmac('sha256', $timestamp . $raw, cashfreeSettings()['secret'], true));
 if ($timestamp === '' || !hash_equals($expected, $signature)) {
     jsonResponse(401, ['error' => 'Invalid signature']);
 }

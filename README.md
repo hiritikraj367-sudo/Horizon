@@ -27,7 +27,9 @@ sqlite3 -header -column private/data/orders.sqlite \
 
 ## Enable Cashfree
 
-Set these environment variables on the host. Keep credentials out of Git.
+Sign in at `/admin/`, open **Cashfree settings**, and save your App ID, Secret Key, mode, and storefront HTTPS URL. The dashboard stores these values in `cashfree-settings.json` beside the private order database with file permissions set to `0600`. Keep that directory outside the web root and restrict access to its backups. Saved credentials are never filled into the form. If you change modes, enter both credentials and verify or resolve any pending payments from the previous mode first.
+
+You can also configure the following environment variables. Values saved through the dashboard take precedence. Keep credentials out of Git.
 
 | Variable | Value |
 | --- | --- |

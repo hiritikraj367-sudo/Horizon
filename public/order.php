@@ -61,7 +61,7 @@ try {
     $id = $order['id'];
     $session = $order['payment_session'];
     if (!$session) {
-        $storeUrl = rtrim(getenv('STORE_URL'), '/');
+        $storeUrl = cashfreeSettings()['store_url'];
         try {
             $remote = cashfreeRequest('/orders', [
                 'order_id' => $id, 'order_currency' => 'INR', 'order_amount' => $order['amount'],
