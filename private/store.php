@@ -23,6 +23,14 @@ function adminPasswordHash(): string
     if ($configuredHash !== false && $configuredHash !== '') {
         return $configuredHash;
     }
+    try {
+        $hash = orderDatabase()->query('SELECT password_hash FROM admin_credentials WHERE id = 1')->fetchColumn();
+        if (is_string($hash) && $hash !== '') {
+            return $hash;
+        }
+    } catch (RuntimeException) {
+        error_log('Home Vexa could not read the SQLite admin credential');
+    }
     $path = __DIR__ . '/admin-password.hash';
     if (!is_readable($path)) {
         return '';
@@ -51,6 +59,9 @@ function orderDatabase(): PDO
             product TEXT NOT NULL, quantity INTEGER NOT NULL, payment TEXT NOT NULL,
             amount INTEGER NOT NULL, status TEXT NOT NULL, payment_session TEXT,
             created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, paid_at TEXT
+        )');
+        $db->exec('CREATE TABLE IF NOT EXISTS admin_credentials (
+            id INTEGER PRIMARY KEY CHECK (id = 1), password_hash TEXT NOT NULL
         )');
     } finally {
         umask($previousMask);

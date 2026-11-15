@@ -44,7 +44,7 @@ This setup uses a PHP host with a persistent disk. Running it on ephemeral serve
 
 ## Admin dashboard
 
-Open `/admin/` to view delivery details and payment status. Admin access requires a configured password hash. Use the private setup script on cPanel or set the `ADMIN_PASSWORD_HASH` environment variable for the PHP process. The environment variable takes precedence. Generate a hash from a strong unique password on a trusted Bash terminal with PHP installed:
+Open `/admin/` to view delivery details and payment status. Admin access requires a configured password hash. Use the private setup script on cPanel or set the `ADMIN_PASSWORD_HASH` environment variable for the PHP process. The environment variable takes precedence, followed by the SQLite credential and then the private password-hash file. Generate a hash from a strong unique password on a trusted Bash terminal with PHP installed:
 
 ```bash
 read -rs -p 'Admin password: ' admin_password
@@ -66,3 +66,12 @@ bash /home/dynamics/homevexa-test-private/set-admin-password.sh
 ```
 
 The script prompts twice and stores only a hash in the private directory. Redeployments preserve the hash. If a hosting environment already sets `ADMIN_PASSWORD_HASH`, remove or update that variable to use the new password. If the subdomain displays a default hosting page, check whether its document root still contains a placeholder `index.html`.
+
+
+To configure the credential in SQLite instead, generate a password hash as shown above and run this in cPanel Terminal after deployment:
+
+```bash
+php /home/dynamics/homevexa-test-private/set-admin-hash.php 'PASTE_PASSWORD_HASH_HERE'
+```
+
+Run it again with a new hash to rotate the password. Existing admin sessions are invalidated when the active hash changes.
