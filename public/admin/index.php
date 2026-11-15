@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-require dirname(__DIR__, 2) . '/private/store.php';
+require dirname(__DIR__) . '/bootstrap.php';
 
 header('Cache-Control: no-store');
 header('X-Robots-Tag: noindex, nofollow');

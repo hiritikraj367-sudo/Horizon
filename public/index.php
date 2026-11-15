@@ -1,6 +1,6 @@
 <?php
 declare(strict_types=1);
-require dirname(__DIR__) . '/private/store.php';
+require __DIR__ . '/bootstrap.php';
 startCheckout();
 header('Cache-Control: no-store');
 $_SESSION['checkout_token'] ??= bin2hex(random_bytes(32));

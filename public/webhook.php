@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-require dirname(__DIR__) . '/private/store.php';
+require __DIR__ . '/bootstrap.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !cashfreeEnabled()) {
     jsonResponse(404, ['error' => 'Webhook unavailable']);

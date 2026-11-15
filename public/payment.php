@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-require dirname(__DIR__) . '/private/store.php';
+require __DIR__ . '/bootstrap.php';
 
 header('Cache-Control: no-store');
 $id = is_string($_GET['order_id'] ?? null) ? $_GET['order_id'] : '';

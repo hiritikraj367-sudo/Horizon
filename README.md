@@ -54,3 +54,9 @@ unset admin_password
 ```
 
 Set the resulting hash as the value of `ADMIN_PASSWORD_HASH` without expanding its dollar signs. Keep the password and hash out of the repository. Serve the dashboard over HTTPS and configure login rate limiting at your web server. For local testing, HTTP on localhost works. Orders are read from the same SQLite database as checkout.
+
+## Deploy the test subdomain with cPanel
+
+For `test.dynamicsorter.in`, keep the existing document root `/home/dynamics/public_html/test.dynamicsorter.in`. Clone this repository in cPanel Git Version Control under `/home/dynamics/repositories/homevexa`. In **Manage → Pull or Deploy**, select **Update from Remote** then **Deploy HEAD Commit**.
+
+The deployment configuration copies public files to the test document root and PHP internals to `/home/dynamics/homevexa-test-private`. The SQLite database and saved Cashfree settings remain in that private folder's `data/` directory between deployments. Set `ADMIN_PASSWORD_HASH` for the PHP process on the hosting account as described above. If the subdomain displays a default hosting page, check whether its document root still contains a placeholder `index.html`.
