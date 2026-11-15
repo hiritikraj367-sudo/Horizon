@@ -1,0 +1,22 @@
+:root { font-family: "DM Sans", system-ui, sans-serif; color: #26382f; background: #faf8f1; }
+body { margin: 0; padding: clamp(1rem, 4vw, 3rem); }
+main { margin-inline: auto; }
+.dashboard { max-width: 78rem; }
+.sign-in { max-width: 25rem; margin-top: 8vh; padding: 1.5rem; background: #fff; border: 1px solid #dbded1; border-radius: .8rem; }
+header { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+.brand { margin: 0; font-weight: 750; color: #396753; }
+h1 { margin: .25rem 0 1rem; }
+.login-form { display: grid; gap: .75rem; }
+.filters, .pagination { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem; }
+.pagination { margin-top: 1rem; }
+button, select, input { font: inherit; padding: .55rem .75rem; border: 1px solid #879a8d; border-radius: .4rem; }
+button { color: white; background: #254b38; cursor: pointer; }
+a { color: #254b38; }
+.error { color: #8b2a22; }
+.table-scroll { overflow-x: auto; border: 1px solid #dbded1; border-radius: .55rem; }
+table { width: 100%; min-width: 48rem; border-collapse: collapse; background: #fff; text-align: left; }
+th, td { padding: .8rem; vertical-align: top; }
+th { background: #e8ede3; }
+td { border-top: 1px solid #e4e7df; }
+small { display: block; margin-top: .25rem; }
+.address { white-space: pre-line; overflow-wrap: anywhere; }

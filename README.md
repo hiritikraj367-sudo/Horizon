@@ -39,3 +39,16 @@ Set these environment variables on the host. Keep credentials out of Git.
 Allowlist the storefront domain in Cashfree and configure payment success notifications to the storefront's `/webhook.php`. The return page and signed success notifications both verify the order with Cashfree before marking it paid. Start with sandbox credentials and confirm the full flow before enabling production. Store information and policy links open the existing Home Vexa pages.
 
 This setup uses a PHP host with a persistent disk. Running it on ephemeral serverless instances requires a compatible PHP runtime and external persistent order storage.
+
+## Admin dashboard
+
+Open `/admin/` to view delivery details and payment status. Admin access is disabled until you set the `ADMIN_PASSWORD_HASH` environment variable for the PHP process. Generate a hash from a strong unique password on a trusted Bash terminal with PHP installed:
+
+```bash
+read -rs -p 'Admin password: ' admin_password
+printf '\n'
+printf '%s' "$admin_password" | php -r 'echo password_hash(stream_get_contents(STDIN), PASSWORD_DEFAULT), PHP_EOL;'
+unset admin_password
+```
+
+Set the resulting hash as the value of `ADMIN_PASSWORD_HASH` without expanding its dollar signs. Keep the password and hash out of the repository. Serve the dashboard over HTTPS and configure login rate limiting at your web server. For local testing, HTTP on localhost works. Orders are read from the same SQLite database as checkout.
