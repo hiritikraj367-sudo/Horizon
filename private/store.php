@@ -29,7 +29,7 @@ function adminPasswordHash(): string
             return $hash;
         }
     } catch (RuntimeException) {
-        error_log('Home Vexa could not read the SQLite admin credential');
+        error_log('Home Vexa could not read the MySQL admin credential');
     }
     $path = __DIR__ . '/admin-password.hash';
     if (!is_readable($path)) {
@@ -45,28 +45,51 @@ function orderDatabase(): PDO
     if ($db instanceof PDO) {
         return $db;
     }
-    $path = getenv('ORDER_DB_PATH') ?: __DIR__ . '/data/orders.sqlite';
-    if (!is_dir(dirname($path)) && !mkdir(dirname($path), 0700, true) && !is_dir(dirname($path))) {
-        throw new RuntimeException('Unable to initialize order storage');
+    $path = __DIR__ . '/database.json';
+    if (!is_readable($path)) {
+        throw new RuntimeException('MySQL configuration is missing');
     }
-    $previousMask = umask(0077);
-    try {
-        $db = new PDO('sqlite:' . $path, null, null, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
-        $db->exec('PRAGMA busy_timeout = 5000');
-        $db->exec('CREATE TABLE IF NOT EXISTS orders (
-            id TEXT PRIMARY KEY, request_id TEXT NOT NULL UNIQUE, name TEXT NOT NULL,
-            phone TEXT NOT NULL, address TEXT NOT NULL, city TEXT NOT NULL, pincode TEXT NOT NULL,
-            product TEXT NOT NULL, quantity INTEGER NOT NULL, payment TEXT NOT NULL,
-            amount INTEGER NOT NULL, status TEXT NOT NULL, payment_session TEXT,
-            created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, paid_at TEXT
-        )');
-        $db->exec('CREATE TABLE IF NOT EXISTS admin_credentials (
-            id INTEGER PRIMARY KEY CHECK (id = 1), password_hash TEXT NOT NULL
-        )');
-    } finally {
-        umask($previousMask);
+    $raw = file_get_contents($path);
+    $config = is_string($raw) ? json_decode($raw, true) : null;
+    $host = $config['host'] ?? 'localhost';
+    $name = $config['database'] ?? '';
+    $user = $config['username'] ?? '';
+    $password = $config['password'] ?? '';
+    if (!is_array($config) || !is_string($host) || !preg_match('/^[a-zA-Z0-9.-]+$/D', $host)
+        || !is_string($name) || !preg_match('/^[a-zA-Z0-9_$-]+$/D', $name)
+        || !is_string($user) || $user === '' || !is_string($password) || $password === '') {
+        throw new RuntimeException('MySQL configuration is invalid');
     }
-    return $db;
+
+    $connection = new PDO("mysql:host=$host;dbname=$name;charset=utf8mb4", $user, $password, [
+        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+        PDO::ATTR_EMULATE_PREPARES => false,
+    ]);
+    $connection->exec("SET time_zone = '+00:00'");
+    $connection->exec('CREATE TABLE IF NOT EXISTS orders (
+        id VARCHAR(32) PRIMARY KEY,
+        request_id VARCHAR(64) NOT NULL UNIQUE,
+        name VARCHAR(300) NOT NULL,
+        phone CHAR(10) NOT NULL,
+        address TEXT NOT NULL,
+        city VARCHAR(300) NOT NULL,
+        pincode CHAR(6) NOT NULL,
+        product VARCHAR(150) NOT NULL,
+        quantity INT UNSIGNED NOT NULL,
+        payment VARCHAR(20) NOT NULL,
+        amount INT UNSIGNED NOT NULL,
+        status VARCHAR(32) NOT NULL,
+        payment_session TEXT,
+        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        paid_at DATETIME DEFAULT NULL,
+        INDEX orders_created (created_at, id),
+        INDEX orders_status_created (status, created_at, id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4');
+    $connection->exec('CREATE TABLE IF NOT EXISTS admin_credentials (
+        id TINYINT UNSIGNED PRIMARY KEY,
+        password_hash VARCHAR(512) NOT NULL
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4');
+    return $db = $connection;
 }
 
 function cashfreeEnabled(): bool

@@ -6,3 +6,4 @@
 cashfree-settings.json
 admin-password.hash
 .admin-password.*
+database.json

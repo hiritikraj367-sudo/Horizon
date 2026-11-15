@@ -4,7 +4,7 @@ A PHP storefront for the Home Vexa five-piece silicone scrubber set. The Buy Now
 
 ## Run locally
 
-Requires PHP 8.1+ with PDO SQLite. The cURL extension is also required for Cashfree.
+Requires PHP 8.1+ with PDO MySQL (`pdo_mysql`). The cURL extension is also required for Cashfree.
 
 ```sh
 php -S 127.0.0.1:8000 -t public
@@ -14,20 +14,24 @@ Open http://127.0.0.1:8000. On a PHP host, point the web server document root at
 
 ## Orders
 
-SQLite is initialized on the first order. The default database is `private/data/orders.sqlite`. Set `ORDER_DB_PATH` to an absolute path outside the document root to use another persistent directory. The database contains customer delivery details. Restrict access and include it in private backups. The database is excluded from Git.
+Create a MySQL or MariaDB database and database user. Copy the example below into the app's private directory as `database.json`. Use your full cPanel database and user names, including their account prefixes. Keep credentials out of Git and the web root.
 
-To inspect recent orders from the server:
-
-```sh
-sqlite3 -header -column private/data/orders.sqlite \
-  'SELECT id, name, phone, address, city, pincode, payment, amount, status, created_at FROM orders ORDER BY created_at DESC LIMIT 20;'
+```json
+{
+  "host": "localhost",
+  "database": "dynamics_homevexa",
+  "username": "dynamics_homevexa",
+  "password": "USE_YOUR_DATABASE_USER_PASSWORD"
+}
 ```
+
+The app creates the `orders` and `admin_credentials` tables on first use. Give the database user CREATE, SELECT, INSERT and UPDATE privileges on this database. View orders in **cPanel → phpMyAdmin → your database → orders → Browse**. Existing SQLite files are left in place and require a separate data migration if they contain orders to retain.
 
 `cod_confirmed` means the customer chose to pay at delivery. `pending_payment` means the online order is awaiting verification. Only `paid` represents a Cashfree-confirmed payment.
 
 ## Enable Cashfree
 
-Sign in at `/admin/`, open **Cashfree settings**, and save your App ID, Secret Key, mode, and storefront HTTPS URL. The dashboard stores these values in `cashfree-settings.json` beside the private order database with file permissions set to `0600`. Keep that directory outside the web root and restrict access to its backups. Saved credentials are never filled into the form. If you change modes, enter both credentials and verify or resolve any pending payments from the previous mode first.
+Sign in at `/admin/`, open **Cashfree settings**, and save your App ID, Secret Key, mode, and storefront HTTPS URL. The dashboard stores these values in `cashfree-settings.json` in the private data directory with file permissions set to `0600`. Keep that directory outside the web root and restrict access to its backups. Saved credentials are never filled into the form. If you change modes, enter both credentials and verify or resolve any pending payments from the previous mode first.
 
 You can also configure the following environment variables. Values saved through the dashboard take precedence. Keep credentials out of Git.
 
@@ -44,7 +48,7 @@ This setup uses a PHP host with a persistent disk. Running it on ephemeral serve
 
 ## Admin dashboard
 
-Open `/admin/` to view delivery details and payment status. Admin access requires a configured password hash. Use the private setup script on cPanel or set the `ADMIN_PASSWORD_HASH` environment variable for the PHP process. The environment variable takes precedence, followed by the SQLite credential and then the private password-hash file. Generate a hash from a strong unique password on a trusted Bash terminal with PHP installed:
+Open `/admin/` to view delivery details and payment status. Admin access requires a configured password hash. Use the private setup script on cPanel or set the `ADMIN_PASSWORD_HASH` environment variable for the PHP process. The environment variable takes precedence, followed by the MySQL credential and then the private password-hash file. Generate a hash from a strong unique password on a trusted Bash terminal with PHP installed:
 
 ```bash
 read -rs -p 'Admin password: ' admin_password
@@ -53,13 +57,13 @@ printf '%s' "$admin_password" | php -r 'echo password_hash(stream_get_contents(S
 unset admin_password
 ```
 
-Set the resulting hash as the value of `ADMIN_PASSWORD_HASH` without expanding its dollar signs. Keep the password and hash out of the repository. Serve the dashboard over HTTPS and configure login rate limiting at your web server. For local testing, HTTP on localhost works. Orders are read from the same SQLite database as checkout.
+Set the resulting hash as the value of `ADMIN_PASSWORD_HASH` without expanding its dollar signs. Keep the password and hash out of the repository. Serve the dashboard over HTTPS and configure login rate limiting at your web server. For local testing, HTTP on localhost works. Orders are read from the same MySQL database as checkout.
 
 ## Deploy the test subdomain with cPanel
 
 For `test.dynamicsorter.in`, keep the existing document root `/home/dynamics/public_html/test.dynamicsorter.in`. Clone this repository in cPanel Git Version Control under `/home/dynamics/repositories/homevexa`. In **Manage → Pull or Deploy**, select **Update from Remote** then **Deploy HEAD Commit**.
 
-The deployment configuration copies public files to the test document root and PHP internals to `/home/dynamics/homevexa-test-private`. The SQLite database and saved Cashfree settings remain in that private folder's `data/` directory between deployments. After deployment, choose the admin password in **cPanel → Terminal**:
+The deployment configuration copies public files to the test document root and PHP internals to `/home/dynamics/homevexa-test-private`. Use **File Manager** to create `/home/dynamics/homevexa-test-private/database.json` with the settings above and set its permissions to `0600`. The deployment preserves this file, the private admin hash file, and saved Cashfree settings. After deployment, choose the admin password in **cPanel → Terminal**:
 
 ```bash
 bash /home/dynamics/homevexa-test-private/set-admin-password.sh
@@ -68,7 +72,7 @@ bash /home/dynamics/homevexa-test-private/set-admin-password.sh
 The script prompts twice and stores only a hash in the private directory. Redeployments preserve the hash. If a hosting environment already sets `ADMIN_PASSWORD_HASH`, remove or update that variable to use the new password. If the subdomain displays a default hosting page, check whether its document root still contains a placeholder `index.html`.
 
 
-To configure the credential in SQLite instead, generate a password hash as shown above and run this in cPanel Terminal after deployment:
+To configure the credential in MySQL instead, generate a password hash as shown above and run this in cPanel Terminal after deployment:
 
 ```bash
 php /home/dynamics/homevexa-test-private/set-admin-hash.php 'PASTE_PASSWORD_HASH_HERE'

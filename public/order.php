@@ -41,13 +41,16 @@ try {
     $requestKey = hash_hmac('sha256', $requestId, $token);
     $insert = $db->prepare('INSERT INTO orders
         (id, request_id, name, phone, address, city, pincode, product, quantity, payment, amount, status)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(request_id) DO NOTHING');
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE request_id = request_id');
     $insert->execute([$id, $requestKey, $name, $phone, $address, $city, $pincode,
         'Silicone scrubber set', 1, $payment, PRICES[$payment], $status]);
 
     $query = $db->prepare('SELECT * FROM orders WHERE request_id = ?');
     $query->execute([$requestKey]);
     $order = $query->fetch(PDO::FETCH_ASSOC);
+    if (!$order) {
+        throw new RuntimeException('Order could not be retrieved');
+    }
     foreach (['name', 'phone', 'address', 'city', 'pincode', 'payment'] as $field) {
         if ($order[$field] !== $$field) {
             jsonResponse(409, ['error' => 'This checkout already has an order. Reload to start a new one.']);
