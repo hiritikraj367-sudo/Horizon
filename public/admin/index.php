@@ -10,7 +10,7 @@ header("Content-Security-Policy: default-src 'none'; style-src 'self'; form-acti
 session_name('homevexa_admin');
 startCheckout();
 
-$passwordHash = getenv('ADMIN_PASSWORD_HASH') ?: '';
+$passwordHash = adminPasswordHash();
 $configured = password_get_info($passwordHash)['algo'] !== null;
 $_SESSION['csrf'] ??= bin2hex(random_bytes(32));
 $authMarker = hash('sha256', $passwordHash);

@@ -18,6 +18,8 @@ fi
 install -d -m 0700 "$private_root"
 install -m 0600 "$repo/private/store.php" "$repo/private/cashfree-settings.php" "$private_root/"
 
+install -m 0700 "$repo/private/set-admin-password.sh" "$private_root/"
+
 stage=$(mktemp -d)
 trap 'rm -rf -- "$stage"' EXIT
 cp -R "$repo/public/." "$stage/"

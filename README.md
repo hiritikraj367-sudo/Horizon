@@ -44,7 +44,7 @@ This setup uses a PHP host with a persistent disk. Running it on ephemeral serve
 
 ## Admin dashboard
 
-Open `/admin/` to view delivery details and payment status. Admin access is disabled until you set the `ADMIN_PASSWORD_HASH` environment variable for the PHP process. Generate a hash from a strong unique password on a trusted Bash terminal with PHP installed:
+Open `/admin/` to view delivery details and payment status. Admin access requires a configured password hash. Use the private setup script on cPanel or set the `ADMIN_PASSWORD_HASH` environment variable for the PHP process. The environment variable takes precedence. Generate a hash from a strong unique password on a trusted Bash terminal with PHP installed:
 
 ```bash
 read -rs -p 'Admin password: ' admin_password
@@ -59,4 +59,10 @@ Set the resulting hash as the value of `ADMIN_PASSWORD_HASH` without expanding i
 
 For `test.dynamicsorter.in`, keep the existing document root `/home/dynamics/public_html/test.dynamicsorter.in`. Clone this repository in cPanel Git Version Control under `/home/dynamics/repositories/homevexa`. In **Manage → Pull or Deploy**, select **Update from Remote** then **Deploy HEAD Commit**.
 
-The deployment configuration copies public files to the test document root and PHP internals to `/home/dynamics/homevexa-test-private`. The SQLite database and saved Cashfree settings remain in that private folder's `data/` directory between deployments. Set `ADMIN_PASSWORD_HASH` for the PHP process on the hosting account as described above. If the subdomain displays a default hosting page, check whether its document root still contains a placeholder `index.html`.
+The deployment configuration copies public files to the test document root and PHP internals to `/home/dynamics/homevexa-test-private`. The SQLite database and saved Cashfree settings remain in that private folder's `data/` directory between deployments. After deployment, choose the admin password in **cPanel → Terminal**:
+
+```bash
+bash /home/dynamics/homevexa-test-private/set-admin-password.sh
+```
+
+The script prompts twice and stores only a hash in the private directory. Redeployments preserve the hash. If a hosting environment already sets `ADMIN_PASSWORD_HASH`, remove or update that variable to use the new password. If the subdomain displays a default hosting page, check whether its document root still contains a placeholder `index.html`.

@@ -4,3 +4,5 @@
 *.sqlite
 *.sqlite-*
 cashfree-settings.json
+admin-password.hash
+.admin-password.*

@@ -17,6 +17,20 @@ function startCheckout(): void
         'cookie_samesite' => 'Lax', 'cookie_secure' => $https]);
 }
 
+function adminPasswordHash(): string
+{
+    $configuredHash = getenv('ADMIN_PASSWORD_HASH');
+    if ($configuredHash !== false && $configuredHash !== '') {
+        return $configuredHash;
+    }
+    $path = __DIR__ . '/admin-password.hash';
+    if (!is_readable($path)) {
+        return '';
+    }
+    $hash = @file_get_contents($path, false, null, 0, 512);
+    return is_string($hash) ? trim($hash) : '';
+}
+
 function orderDatabase(): PDO
 {
     static $db;
