@@ -121,7 +121,7 @@ function pageUrl(int $page, string $status): string
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Orders | Home Vexa Admin</title>
-    <link rel="stylesheet" href="../assets/admin.css">
+    <link rel="stylesheet" href="/assets/admin.css">
 </head>
 <body>
 <main class="<?= $authenticated ? 'dashboard' : 'sign-in' ?>">
