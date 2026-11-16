@@ -9,9 +9,11 @@ $message = 'This order could not be found.';
 try {
     $order = orderById($id);
     if ($order && $order['payment'] === 'cashfree') {
-        $message = verifyCashfreeOrder($order)
-            ? 'Payment verified. Your order is confirmed.'
-            : 'Payment has not been confirmed. Refresh this page to check again.';
+        if (verifyCashfreeOrder($order)) {
+            header('Location: ./thank-you.php?order_id=' . rawurlencode($order['id']), true, 303);
+            exit;
+        }
+        $message = 'Payment has not been confirmed. Refresh this page to check again.';
     } else {
         http_response_code(404);
     }

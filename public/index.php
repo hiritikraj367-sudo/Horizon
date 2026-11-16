@@ -21,7 +21,7 @@ $_SESSION['checkout_token'] ??= bin2hex(random_bytes(32));
 <link rel="icon" href="./assets/home-vexa-mark.svg" type="image/svg+xml"/>
 <link rel="apple-touch-icon" href="./assets/apple-icon.png"/>
 <link rel="stylesheet" href="./assets/checkout.css">
-<script src="./assets/store.js" defer>
+<script src="./assets/store.js?v=<?= filemtime(__DIR__ . '/assets/store.js') ?>" defer>
 </script>
 </head>
 <body class="antialiased">

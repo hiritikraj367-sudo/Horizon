@@ -142,9 +142,12 @@ form.addEventListener('submit', async event => {
       if (payment?.error) throw new Error('Payment could not start. Please try again.');
       return;
     }
+    if (!['cod_confirmed', 'paid'].includes(result.status) || !result.order_id) {
+      throw new Error('Order confirmation could not be retrieved. Please try again.');
+    }
     completed = true;
     [...form.querySelectorAll('input, textarea, button')].forEach(element => { element.disabled = true; });
-    feedback.textContent = 'Order confirmed. Reference: ' + result.order_id + '. Total: ' + money.format(result.amount) + '.';
+    window.location.assign('./thank-you.php?order_id=' + encodeURIComponent(result.order_id));
   } catch (error) {
     feedback.textContent = error.message || 'Checkout could not complete. Try again.';
   } finally {
