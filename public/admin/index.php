@@ -7,9 +7,8 @@ header('Cache-Control: no-store');
 header('X-Robots-Tag: noindex, nofollow');
 header('X-Frame-Options: DENY');
 $stylesheet = file_get_contents(dirname(__DIR__) . '/assets/admin.css');
-$stylesheet = str_replace(["\r\n", "\r"], "\n", $stylesheet === false ? '' : $stylesheet);
-$styleHash = base64_encode(hash('sha256', $stylesheet, true));
-header("Content-Security-Policy: default-src 'none'; style-src 'sha256-$styleHash'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'");
+$styleNonce = base64_encode(random_bytes(18));
+header("Content-Security-Policy: default-src 'none'; style-src 'nonce-$styleNonce'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'");
 session_name('homevexa_admin');
 startCheckout();
 
@@ -124,7 +123,7 @@ function pageUrl(int $page, string $status): string
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Orders | Home Vexa Admin</title>
-    <style><?= $stylesheet ?></style>
+    <style nonce="<?= $styleNonce ?>"><?= $stylesheet ?></style>
 </head>
 <body>
 <main class="<?= $authenticated ? 'dashboard' : 'sign-in' ?>">
