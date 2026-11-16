@@ -126,8 +126,20 @@ function cashfreeRequest(string $endpoint, ?array $body = null): array
     }
     $raw = curl_exec($curl);
     $status = curl_getinfo($curl, CURLINFO_RESPONSE_CODE);
+    $curlError = curl_errno($curl);
     curl_close($curl);
     if (!is_string($raw) || $status < 200 || $status >= 300) {
+        $details = is_string($raw) ? json_decode($raw, true) : null;
+        $code = $details['code'] ?? '';
+        $safeCode = is_string($code) && preg_match('/^[a-zA-Z0-9_-]{1,80}$/D', $code) ? $code : 'unavailable';
+        error_log(sprintf(
+            'Home Vexa Cashfree %s %s failed: HTTP %d, cURL %d, code %s',
+            cashfreeMode(),
+            $body === null ? 'get order' : 'create order',
+            $status,
+            $curlError,
+            $safeCode
+        ));
         throw new RuntimeException('Cashfree request failed with status ' . $status);
     }
     return json_decode($raw, true, 512, JSON_THROW_ON_ERROR);
