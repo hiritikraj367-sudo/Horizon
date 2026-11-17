@@ -20,7 +20,7 @@ $_SESSION['checkout_token'] ??= bin2hex(random_bytes(32));
 <link rel="icon" href="./assets/home-vexa-mark.svg" media="(prefers-color-scheme: dark)"/>
 <link rel="icon" href="./assets/home-vexa-mark.svg" type="image/svg+xml"/>
 <link rel="apple-touch-icon" href="./assets/apple-icon.png"/>
-<link rel="stylesheet" href="./assets/checkout.css">
+<link rel="stylesheet" href="./assets/checkout.css?v=<?= filemtime(__DIR__ . '/assets/checkout.css') ?>">
 <script src="./assets/store.js?v=<?= filemtime(__DIR__ . '/assets/store.js') ?>" defer>
 </script>
 </head>
@@ -574,7 +574,7 @@ $_SESSION['checkout_token'] ??= bin2hex(random_bytes(32));
 </div>
 <dialog class="he-image-viewer" aria-label="Enlarged product photos">
 <div class="he-viewer-content">
-<img class="enlarged-photo" src="./assets/01.webp" alt="">
+<div class="swiper he-viewer-swiper"><div class="swiper-wrapper"></div></div>
 <span class="he-viewer-count" aria-live="polite">01 / 08</span>
 <button class="he-viewer-step he-viewer-step--previous" type="button" aria-label="Previous enlarged product photo">
 <svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-left" aria-hidden="true">

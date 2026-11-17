@@ -5,13 +5,7 @@ const form = checkout.querySelector('form');
 const feedback = document.querySelector('#checkout-status');
 const submit = form.querySelector('button[type="submit"]');
 const viewer = document.querySelector('.he-image-viewer');
-const slides = [...document.querySelectorAll('.he-gallery-swiper .swiper-slide')];
-const thumbnails = [...document.querySelectorAll('.he-thumbnail')];
-const reviews = [...document.querySelectorAll('.he-reviews-swiper .swiper-slide')];
-const showTwoReviews = matchMedia('(min-width: 720px)');
 const money = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 });
-let photoIndex = 0;
-let reviewIndex = 0;
 let completed = false;
 let checkoutSdk;
 
@@ -26,87 +20,98 @@ for (const [dialog, closeSelector] of [[checkout, '.he-checkout-close'], [viewer
   });
 }
 
-function renderPhoto(index) {
-  photoIndex = (index + slides.length) % slides.length;
-  slides.forEach((slide, number) => { slide.hidden = number !== photoIndex; });
+const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+
+function connectCarousel(container, previous, next, visibleCount, onChange) {
+  const slides = [...container.querySelectorAll('.swiper-slide')];
+  const lastIndex = slides.length - visibleCount;
+  let index = 0;
+
+  function goTo(target, smooth = true) {
+    const nextIndex = (target + lastIndex + 1) % (lastIndex + 1);
+    const wraps = target !== nextIndex;
+    const animate = smooth && !wraps && !reducedMotion.matches;
+    container.scrollTo({ left: slides[nextIndex].offsetLeft, behavior: animate ? 'smooth' : 'instant' });
+    if (!animate) updateIndex();
+  }
+
+  function updateIndex() {
+    const stride = slides[1].offsetLeft - slides[0].offsetLeft;
+    if (!stride) return;
+    const nextIndex = Math.max(0, Math.min(lastIndex, Math.round(container.scrollLeft / stride)));
+    if (index === nextIndex) return;
+    index = nextIndex;
+    onChange(index);
+  }
+
+  container.addEventListener('scroll', updateIndex, { passive: true });
+  previous.addEventListener('click', () => goTo(index - 1));
+  next.addEventListener('click', () => goTo(index + 1));
+  return goTo;
+}
+
+const galleryTrack = document.querySelector('.he-gallery-swiper');
+const gallerySlides = [...galleryTrack.querySelectorAll('.swiper-slide')];
+const thumbnails = [...document.querySelectorAll('.he-thumbnail')];
+const galleryCount = document.querySelector('.he-image-count');
+const viewerCount = viewer.querySelector('.he-viewer-count');
+const viewerTrack = viewer.querySelector('.he-viewer-swiper');
+const viewerSlides = viewerTrack.querySelector('.swiper-wrapper');
+const [previousReview, nextReview] = document.querySelectorAll('.he-review-nav-button');
+const reviewTrack = document.querySelector('.he-reviews-swiper');
+const reviewStatus = document.querySelector('.he-review-pair-status');
+const reviewCount = reviewTrack.querySelectorAll('.swiper-slide').length;
+let viewerIndex = 0;
+
+for (const slide of gallerySlides) {
+  const viewerSlide = document.createElement('div');
+  viewerSlide.className = 'swiper-slide';
+  const image = slide.querySelector('img').cloneNode();
+  image.className = 'enlarged-photo';
+  image.removeAttribute('style');
+  viewerSlide.append(image);
+  viewerSlides.append(viewerSlide);
+}
+
+function photoCount(index) {
+  return String(index + 1).padStart(2, '0') + ' / ' + String(gallerySlides.length).padStart(2, '0');
+}
+
+const goToPhoto = connectCarousel(galleryTrack, document.querySelector('.he-previous'), document.querySelector('.he-next'), 1, index => {
   thumbnails.forEach((button, number) => {
-    const active = number === photoIndex;
+    const active = number === index;
     button.classList.toggle('is-active', active);
     button.setAttribute('aria-pressed', String(active));
   });
-  const count = String(photoIndex + 1).padStart(2, '0') + ' / ' + String(slides.length).padStart(2, '0');
-  document.querySelector('.he-image-count').textContent = count;
-  viewer.querySelector('.he-viewer-count').textContent = count;
-  const photo = slides[photoIndex].querySelector('img');
-  const enlarged = viewer.querySelector('.enlarged-photo');
-  enlarged.src = photo.src;
-  enlarged.alt = photo.alt;
-}
+  galleryCount.textContent = photoCount(index);
+});
 
-thumbnails.forEach((button, index) => button.addEventListener('click', () => renderPhoto(index)));
-slides.forEach(slide => slide.querySelector('button').addEventListener('click', () => viewer.showModal()));
-for (const [selector, direction] of [
-  ['.he-previous', -1], ['.he-next', 1],
-  ['.he-viewer-step--previous', -1], ['.he-viewer-step--next', 1],
-]) {
-  document.querySelector(selector).addEventListener('click', () => renderPhoto(photoIndex + direction));
-}
+const goToViewerPhoto = connectCarousel(viewerTrack, viewer.querySelector('.he-viewer-step--previous'), viewer.querySelector('.he-viewer-step--next'), 1, index => {
+  viewerIndex = index;
+  viewerCount.textContent = photoCount(index);
+});
+
+gallerySlides.forEach((slide, index) => {
+  thumbnails[index].addEventListener('click', () => goToPhoto(index));
+  slide.querySelector('button').addEventListener('click', () => {
+    viewer.showModal();
+    viewerIndex = index;
+    viewerCount.textContent = photoCount(index);
+    goToViewerPhoto(index, false);
+  });
+});
+
+viewer.addEventListener('close', () => goToPhoto(viewerIndex, false));
 viewer.addEventListener('keydown', event => {
   if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
     event.preventDefault();
-    renderPhoto(photoIndex + (event.key === 'ArrowLeft' ? -1 : 1));
+    goToViewerPhoto(viewerIndex + (event.key === 'ArrowLeft' ? -1 : 1));
   }
 });
-for (const surface of [viewer.querySelector('.enlarged-photo'), document.querySelector('.he-gallery-swiper')]) {
-  let startX;
-  surface.addEventListener('touchstart', event => { startX = event.changedTouches[0].clientX; }, { passive: true });
-  surface.addEventListener('touchend', event => {
-    const distance = event.changedTouches[0].clientX - startX;
-    if (Math.abs(distance) > 50) renderPhoto(photoIndex + (distance < 0 ? 1 : -1));
-  }, { passive: true });
-}
-renderPhoto(0);
 
-function renderReviews(index) {
-  reviewIndex = (index + reviews.length) % reviews.length;
-  reviews.forEach((review, number) => {
-    const next = (reviewIndex + 1) % reviews.length;
-    review.hidden = number !== reviewIndex && !(showTwoReviews.matches && number === next);
-    review.style.order = number === reviewIndex ? 0 : 1;
-  });
-  document.querySelector('.he-review-pair-status').textContent = 'Review ' + (reviewIndex + 1) + ' of ' + reviews.length;
-}
-const [previousReview, nextReview] = document.querySelectorAll('.he-review-nav-button');
-previousReview.addEventListener('click', () => renderReviews(reviewIndex - 1));
-nextReview.addEventListener('click', () => renderReviews(reviewIndex + 1));
-const reviewCarousel = document.querySelector('.he-reviews-swiper');
-let reviewTouchStart;
-
-reviewCarousel.addEventListener('touchstart', event => {
-  reviewTouchStart = event.touches.length === 1 ? event.touches[0] : null;
-}, { passive: true });
-
-reviewCarousel.addEventListener('touchcancel', () => {
-  reviewTouchStart = null;
-}, { passive: true });
-
-reviewCarousel.addEventListener('touchend', event => {
-  const start = reviewTouchStart;
-  reviewTouchStart = null;
-  if (!start || event.touches.length > 0) return;
-
-  const end = event.changedTouches[0];
-  if (!end || end.identifier !== start.identifier) return;
-
-  const horizontalDistance = end.clientX - start.clientX;
-  const verticalDistance = end.clientY - start.clientY;
-  if (Math.abs(horizontalDistance) >= 50 && Math.abs(horizontalDistance) > Math.abs(verticalDistance)) {
-    renderReviews(reviewIndex + (horizontalDistance < 0 ? 1 : -1));
-  }
-}, { passive: true });
-
-showTwoReviews.addEventListener('change', () => renderReviews(reviewIndex));
-renderReviews(0);
+connectCarousel(reviewTrack, previousReview, nextReview, 2, index => {
+  reviewStatus.textContent = 'Review ' + (index + 1) + ' of ' + reviewCount;
+});
 
 const save = document.querySelector('.he-save');
 function setSaved(saved) {
