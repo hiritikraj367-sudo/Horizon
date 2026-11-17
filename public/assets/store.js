@@ -5,9 +5,7 @@ const form = checkout.querySelector('form');
 const feedback = document.querySelector('#checkout-status');
 const submit = form.querySelector('button[type="submit"]');
 const viewer = document.querySelector('.he-image-viewer');
-const money = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 });
 let completed = false;
-let checkoutSdk;
 
 document.querySelectorAll('button[data-buy]').forEach(button => {
   button.addEventListener('click', () => checkout.showModal());
@@ -125,34 +123,6 @@ save.addEventListener('click', () => {
   try { localStorage.setItem('home-vexa-saved', saved ? '1' : '0'); } catch {}
 });
 
-function updatePayment() {
-  const online = form.elements.payment.value === 'cashfree';
-  const amount = online ? 200 : 239;
-  const discount = Math.round((999 - amount) / 999 * 100) + '% OFF';
-  const label = online ? 'online payment' : 'cash on delivery';
-  const total = form.querySelector('.he-form-total');
-  total.firstElementChild.textContent = 'Total · ' + label;
-  total.querySelector('strong').textContent = money.format(amount);
-  total.querySelector('.he-price-discount').textContent = discount;
-  total.querySelector('[role="group"]').setAttribute('aria-label', 'MRP ₹999, ' + label + ' price ' + money.format(amount) + ', ' + discount);
-  submit.firstChild.textContent = online ? ' Pay securely ' : ' Place COD order ';
-}
-
-function loadCashfree() {
-  checkoutSdk ??= new Promise((resolve, reject) => {
-    const script = document.createElement('script');
-    script.src = 'https://sdk.cashfree.com/js/v3/cashfree.js';
-    script.onload = () => window.Cashfree ? resolve(window.Cashfree) : reject(new Error('Payment page could not load. Try again.'));
-    script.onerror = () => reject(new Error('Payment page could not load. Try again.'));
-    document.head.append(script);
-  }).catch(error => {
-    checkoutSdk = undefined;
-    throw error;
-  });
-  return checkoutSdk;
-}
-
-form.addEventListener('change', updatePayment);
 form.addEventListener('submit', async event => {
   event.preventDefault();
   if (completed || submit.disabled) return;
@@ -164,16 +134,7 @@ form.addEventListener('submit', async event => {
     const response = await fetch(form.action, { method: 'POST', body: data });
     const result = await response.json();
     if (!response.ok) throw new Error(result.error || 'Order could not be saved. Try again.');
-    if (result.session) {
-      const Cashfree = await loadCashfree();
-      const payment = await Cashfree({ mode: result.mode }).checkout({
-        paymentSessionId: result.session,
-        redirectTarget: '_self',
-      });
-      if (payment?.error) throw new Error('Payment could not start. Please try again.');
-      return;
-    }
-    if (!['cod_confirmed', 'paid'].includes(result.status) || !result.order_id) {
+    if (result.status !== 'cod_confirmed' || !result.order_id) {
       throw new Error('Order confirmation could not be retrieved. Please try again.');
     }
     completed = true;

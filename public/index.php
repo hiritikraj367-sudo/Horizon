@@ -14,7 +14,7 @@ $_SESSION['checkout_token'] ??= bin2hex(random_bytes(32));
 <meta name="theme-color" content="#f7f5ef"/>
 <meta name="color-scheme" content="light"/>
 <title>Branded Silicone Scrubbers | Home Vexa</title>
-<meta name="description" content="Home Vexa — Everyday Home Essentials. Five colorful reusable silicone dish scrubbers, ₹239 down from ₹999, with an additional online payment offer at checkout."/>
+<meta name="description" content="Home Vexa — Everyday Home Essentials. Five colorful reusable silicone dish scrubbers, ₹239 down from ₹999."/>
 <meta name="generator" content="v0.app"/>
 <link rel="icon" href="./assets/home-vexa-mark.svg" media="(prefers-color-scheme: light)"/>
 <link rel="icon" href="./assets/home-vexa-mark.svg" media="(prefers-color-scheme: dark)"/>
@@ -196,28 +196,8 @@ $_SESSION['checkout_token'] ??= bin2hex(random_bytes(32));
 <strong>₹239</strong>
 <span class="he-price-discount">76% OFF</span>
 </span>
-<span class="he-price-note">Set of 5<?= cashfreeEnabled() ? ' · Save ₹39 when you pay online' : '' ?></span>
+<span class="he-price-note">Set of 5</span>
 </div>
-<aside class="he-offer-card" aria-label="Online payment offer" <?= cashfreeEnabled() ? '' : 'hidden' ?>>
-<span class="he-offer-icon" aria-hidden="true">
-<svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-badge-percent" aria-hidden="true">
-<path d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z">
-</path>
-<path d="m15 9-6 6">
-</path>
-<path d="M9 9h.01">
-</path>
-<path d="M15 15h.01">
-</path>
-</svg>
-</span>
-<div class="he-offer-copy">
-<p class="he-offer-eyebrow">Online offer</p>
-<p class="he-offer-title">Extra savings when you pay online</p>
-<p class="he-offer-detail">Choose online payment at checkout to see your discounted total.</p>
-</div>
-<span class="he-offer-badge">ONLINE OFFER</span>
-</aside>
 <p class="he-description">Meet your new sink-side favorites: five colorful silicone scrubbers with flexible bristles for your daily dishwashing ritual. Easy to rinse, ready to use again.</p>
 <div class="he-highlights">
 <div>
@@ -315,7 +295,7 @@ $_SESSION['checkout_token'] ??= bin2hex(random_bytes(32));
 </ul>
 <div class="he-promise">
 <span>01 <i>—</i> SMALL JOYS, DAILY</span>
-<span>02 <i>—</i> PAY ONLINE &amp; SAVE ₹39</span>
+<span>02 <i>—</i> CASH ON DELIVERY</span>
 </div>
 </div>
 </section>
@@ -617,7 +597,7 @@ $_SESSION['checkout_token'] ??= bin2hex(random_bytes(32));
 <h2 id="checkout-title">A happier sink<br/>
 <em>starts here.</em>
 </h2>
-<p id="checkout-description" class="he-checkout-description">Add your delivery details and choose how you&#x27;d like to pay.</p>
+<p id="checkout-description" class="he-checkout-description">Enter your delivery details and pay when your order arrives.</p>
 <div class="he-order-summary">
 <div>
 <span>Silicone scrubber set</span>
@@ -645,35 +625,6 @@ $_SESSION['checkout_token'] ??= bin2hex(random_bytes(32));
 <label class="he-field">PIN code<input inputMode="numeric" autoComplete="postal-code" placeholder="6-digit PIN" pattern="[0-9]{6}" maxLength="6" required="" name="pincode"/>
 </label>
 </div>
-<fieldset class="he-payment-choice">
-<legend>Payment method</legend>
-<label>
-<input type="radio" name="payment" checked="" value="cod"/>
-<span class="he-payment-icon">COD</span>
-<span>
-<strong>Cash on delivery · ₹239</strong>
-<small>Pay when your order arrives</small>
-</span>
-<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check he-payment-check" aria-hidden="true">
-<path d="M20 6 9 17l-5-5">
-</path>
-</svg>
-</label>
-<label>
-<input type="radio" name="payment" value="cashfree" <?= cashfreeEnabled() ? '' : 'disabled' ?>/>
-<span class="he-payment-icon">CF</span>
-<span>
-<strong>Pay online · ₹200</strong>
-<small>
-<?= cashfreeEnabled() ? 'Save ₹39 · secure online checkout' : 'Online payment coming soon' ?>
-</small>
-</span>
-<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check he-payment-check" aria-hidden="true">
-<path d="M20 6 9 17l-5-5">
-</path>
-</svg>
-</label>
-</fieldset>
 <div class="he-form-total">
 <span>Total · cash on delivery</span>
 <span class="he-price-pair he-price-pair--compact" role="group" aria-label="MRP ₹999, cash on delivery price ₹239, 76% off.">
@@ -691,7 +642,7 @@ $_SESSION['checkout_token'] ??= bin2hex(random_bytes(32));
 </button>
 <p id="checkout-status" role="status" hidden>
 </p>
-<p class="he-demo-disclaimer">Delivery details are used only to process this order. Online payments are verified with Cashfree before order confirmation.</p>
+<p class="he-demo-disclaimer">Delivery details are used only to process this order.</p>
 </form>
 </div>
 </dialog>

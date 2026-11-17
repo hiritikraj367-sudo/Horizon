@@ -21,31 +21,27 @@ $phone = $input('phone');
 $address = $input('address');
 $city = $input('city');
 $pincode = $input('pincode');
-$payment = $input('payment');
+$payment = $input('payment') ?: 'cod';
 $requestId = $input('request_id');
 if ($name === '' || strlen($name) > 300 || $address === '' || strlen($address) > 1500
     || $city === '' || strlen($city) > 300 || !preg_match('/^[0-9]{10}$/D', $phone)
     || !preg_match('/^[0-9]{6}$/D', $pincode) || !preg_match('/^[a-f0-9]{32}$/D', $requestId)
-    || !isset(PRICES[$payment])) {
+    || $payment !== 'cod') {
     jsonResponse(422, ['error' => 'Check your delivery details, 10-digit mobile number and 6-digit PIN.']);
 }
-if ($payment === 'cashfree' && !cashfreeEnabled()) {
-    jsonResponse(422, ['error' => 'Online payment is unavailable. Please choose cash on delivery.']);
-}
-
 try {
     $stage = 'database_connection';
     $db = orderDatabase();
     $stage = 'order_save';
     $id = 'HV-' . bin2hex(random_bytes(12));
-    $status = $payment === 'cod' ? 'cod_confirmed' : 'pending_payment';
+    $status = 'cod_confirmed';
     // Bind retries to the browser session so one checkout cannot retrieve another checkout's result.
     $requestKey = hash_hmac('sha256', $requestId, $token);
     $insert = $db->prepare('INSERT INTO orders
         (id, request_id, name, phone, address, city, pincode, product, quantity, payment, amount, status)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE request_id = request_id');
     $insert->execute([$id, $requestKey, $name, $phone, $address, $city, $pincode,
-        'Silicone scrubber set', 1, $payment, PRICES[$payment], $status]);
+        'Silicone scrubber set', 1, $payment, COD_PRICE, $status]);
 
     $query = $db->prepare('SELECT * FROM orders WHERE request_id = ?');
     $query->execute([$requestKey]);
@@ -59,49 +55,9 @@ try {
         }
     }
 
-    if ($payment === 'cod' || $order['status'] === 'paid') {
-        jsonResponse(200, ['order_id' => $order['id'], 'status' => $order['status'], 'amount' => $order['amount']]);
-    }
-
-    $id = $order['id'];
-    $session = $order['payment_session'];
-    if (!$session) {
-        $stage = 'cashfree_create_order';
-        $storeUrl = cashfreeSettings()['store_url'];
-        try {
-            $remote = cashfreeRequest('/orders', [
-                'order_id' => $id, 'order_currency' => 'INR', 'order_amount' => $order['amount'],
-                'customer_details' => ['customer_id' => $id, 'customer_name' => $name, 'customer_phone' => $phone],
-                'order_meta' => [
-                    'return_url' => $storeUrl . '/payment.php?order_id={order_id}',
-                    'notify_url' => $storeUrl . '/webhook.php',
-                ],
-            ]);
-        } catch (CashfreeRequestException $createError) {
-            // A network retry may come after the gateway already created this order.
-            try {
-                $remote = cashfreeRequest('/orders/' . rawurlencode($id));
-            } catch (Throwable) {
-                throw $createError;
-            }
-        }
-        $stage = 'cashfree_session_response';
-        $session = $remote['payment_session_id'] ?? '';
-        if (!is_string($session) || $session === '') {
-            throw new RuntimeException('Cashfree session missing');
-        }
-        $stage = 'payment_session_save';
-        $update = $db->prepare('UPDATE orders SET payment_session = ? WHERE id = ?');
-        $update->execute([$session, $id]);
-    }
-    jsonResponse(200, ['order_id' => $id, 'status' => 'pending_payment', 'session' => $session, 'mode' => cashfreeMode()]);
+    jsonResponse(200, ['order_id' => $order['id'], 'status' => $order['status'], 'amount' => $order['amount']]);
 } catch (Throwable $e) {
     $diagnostic = ['stage' => $stage];
-    if ($e instanceof CashfreeRequestException) {
-        $diagnostic['cashfree_http_status'] = $e->httpStatus;
-        $diagnostic['curl_errno'] = $e->curlNumber;
-        $diagnostic['cashfree_code'] = $e->gatewayCode;
-    }
     error_log('Home Vexa checkout failed at ' . $stage . ': ' . get_class($e));
     jsonResponse(503, [
         'error' => 'Checkout could not complete. Please try again.',

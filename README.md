@@ -1,16 +1,16 @@
 # Home Vexa
 
-A PHP storefront for the Home Vexa five-piece silicone scrubber set. The Buy Now dialog collects name, mobile number, delivery address, city and PIN. It supports ₹239 cash on delivery and an optional ₹200 Cashfree checkout.
+A PHP storefront for the Home Vexa five-piece silicone scrubber set. The Buy Now dialog collects name, mobile number, delivery address, city and PIN. It supports ₹239 cash on delivery.
 
 ## Run locally
 
-Requires PHP 8.1+ with PDO MySQL (`pdo_mysql`). The cURL extension is also required for Cashfree.
+Requires PHP 8.1+ with PDO MySQL (`pdo_mysql`).
 
 ```sh
 php -S 127.0.0.1:8000 -t public
 ```
 
-Open http://127.0.0.1:8000. On a PHP host, point the web server document root at `public/`. Keep `private/` outside the document root. Give the PHP process write access to a private, persistent directory. COD works without payment credentials.
+Open http://127.0.0.1:8000. On a PHP host, point the web server document root at `public/`. Keep `private/` outside the document root. Give the PHP process write access to a private, persistent directory.
 
 ## Orders
 
@@ -27,22 +27,7 @@ Create a MySQL or MariaDB database and database user. Copy the example below int
 
 The app creates the `orders` and `admin_credentials` tables on first use. Give the database user CREATE, SELECT, INSERT and UPDATE privileges on this database. View orders in **cPanel → phpMyAdmin → your database → orders → Browse**. Existing SQLite files are left in place and require a separate data migration if they contain orders to retain.
 
-`cod_confirmed` means the customer chose to pay at delivery. `pending_payment` means the online order is awaiting verification. Only `paid` represents a Cashfree-confirmed payment.
-
-## Enable Cashfree
-
-Sign in at `/admin/`, open **Cashfree settings**, and save your App ID, Secret Key, mode, and storefront HTTPS URL. The dashboard stores these values in `cashfree-settings.json` in the private data directory with file permissions set to `0600`. Keep that directory outside the web root and restrict access to its backups. Saved credentials are never filled into the form. If you change modes, enter both credentials and verify or resolve any pending payments from the previous mode first.
-
-You can also configure the following environment variables. Values saved through the dashboard take precedence. Keep credentials out of Git.
-
-| Variable | Value |
-| --- | --- |
-| `STORE_URL` | Public HTTPS base URL serving the store |
-| `CASHFREE_MODE` | `sandbox` for testing or `production` for live payments |
-| `CASHFREE_CLIENT_ID` | Cashfree App ID for the selected mode |
-| `CASHFREE_CLIENT_SECRET` | Cashfree secret key for the selected mode |
-
-Allowlist the storefront domain in Cashfree and configure payment success notifications to the storefront's `/webhook.php`. The return page and signed success notifications both verify the order with Cashfree before marking it paid. Start with sandbox credentials and confirm the full flow before enabling production. Store information and policy links open the existing Home Vexa pages.
+New orders use `cod_confirmed`. Historical order records and their payment statuses remain visible in the admin dashboard.
 
 This setup uses a PHP host with a persistent disk. Running it on ephemeral serverless instances requires a compatible PHP runtime and external persistent order storage.
 
@@ -63,7 +48,7 @@ Set the resulting hash as the value of `ADMIN_PASSWORD_HASH` without expanding i
 
 For `test.dynamicsorter.in`, keep the existing document root `/home/dynamics/public_html/test.dynamicsorter.in`. Clone this repository in cPanel Git Version Control under `/home/dynamics/repositories/homevexa`. In **Manage → Pull or Deploy**, select **Update from Remote** then **Deploy HEAD Commit**.
 
-The deployment configuration copies public files to the test document root and PHP internals to `/home/dynamics/homevexa-test-private`. Use **File Manager** to create `/home/dynamics/homevexa-test-private/database.json` with the settings above and set its permissions to `0600`. The deployment preserves this file, the private admin hash file, and saved Cashfree settings. After deployment, choose the admin password in **cPanel → Terminal**:
+The deployment configuration copies public files to the test document root and PHP internals to `/home/dynamics/homevexa-test-private`. Use **File Manager** to create `/home/dynamics/homevexa-test-private/database.json` with the settings above and set its permissions to `0600`. The deployment preserves this file and the private admin hash file. After deployment, choose the admin password in **cPanel → Terminal**:
 
 ```bash
 bash /home/dynamics/homevexa-test-private/set-admin-password.sh

@@ -21,7 +21,6 @@
 .he-image-viewer .he-viewer-count,
 .he-image-viewer .he-viewer-close { z-index: 1; }
 .he-save.is-saved svg { fill: currentColor; }
-.he-payment-choice label:has(:disabled) { opacity: .55; cursor: default; }
 #checkout-status { background: #eaf1e7; border: 1px solid #cad8c7; padding: .8rem; color: #253724; overflow-wrap: anywhere; }
 .order-result { background: #faf9f3; color: #283629; font: 1rem/1.55 system-ui, sans-serif; margin: 0; padding: 2rem 1rem; }
 .order-result main { max-width: 32rem; margin: 12vh auto 0; padding: 1.5rem; background: white; border: 1px solid #deded3; }
@@ -31,4 +30,9 @@
   .he-reviews-swiper .swiper-wrapper { gap: 0.5rem; }
   .he-reviews-swiper .swiper-slide { flex-basis: calc((100% - 0.5rem) / 2); }
   .he-review-avatar { flex-basis: 30px; width: 30px; height: 30px; }
+}
+
+@media (any-pointer: coarse), (max-width: 720px) {
+  .he-checkout .he-field input,
+  .he-checkout .he-field textarea { font-size: 16px; }
 }

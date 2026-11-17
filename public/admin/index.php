@@ -37,20 +37,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         session_regenerate_id(true);
         header('Location: ./', true, 303);
         exit;
-    } elseif ($action === 'save_cashfree' && $authenticated) {
-        try {
-            saveCashfreeSettings($_POST);
-            $_SESSION['cashfree_saved'] = true;
-            header('Location: ./#cashfree', true, 303);
-            exit;
-        } catch (InvalidArgumentException $e) {
-            http_response_code(422);
-            $error = $e->getMessage();
-        } catch (Throwable $e) {
-            http_response_code(503);
-            error_log('Home Vexa could not save Cashfree settings: ' . get_class($e));
-            $error = 'Cashfree settings could not be saved. Check private storage permissions.';
-        }
     } elseif ($action === 'login' && $configured && !$authenticated) {
         if (is_string($password) && strlen($password) <= 1024 && password_verify($password, $passwordHash)) {
             if (!session_regenerate_id(true)) {
@@ -70,9 +56,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $csrf = $_SESSION['csrf'];
-$cashfreeSaved = $authenticated && !empty($_SESSION['cashfree_saved']);
-unset($_SESSION['cashfree_saved']);
-$cashfree = $authenticated ? cashfreeSettings() : [];
 if ($authenticated) {
     $_SESSION['last_seen'] = time();
 }
@@ -151,27 +134,6 @@ function pageUrl(int $page, string $status): string
             <button name="action" value="login">Sign in</button>
         </form>
     <?php else: ?>
-        <details id="cashfree" class="payment-settings" <?= $cashfreeSaved || ($_POST['action'] ?? '') === 'save_cashfree' ? 'open' : '' ?>>
-            <summary>Cashfree settings</summary>
-            <?php if ($cashfreeSaved): ?><p role="status">Cashfree settings saved. Place a sandbox test order before accepting live payments.</p><?php endif ?>
-            <p><?= cashfreeEnabled() ? 'Online checkout is enabled.' : 'Online checkout is unavailable until the settings and PHP cURL are available.' ?></p>
-            <form method="post" class="settings-form" autocomplete="off">
-                <input type="hidden" name="csrf" value="<?= escape($csrf) ?>">
-                <label for="cashfree-mode">Mode</label>
-                <select id="cashfree-mode" name="mode">
-                    <option value="sandbox" <?= $cashfree['mode'] === 'sandbox' ? 'selected' : '' ?>>Sandbox</option>
-                    <option value="production" <?= $cashfree['mode'] === 'production' ? 'selected' : '' ?>>Production</option>
-                </select>
-                <label for="store-url">Storefront HTTPS URL</label>
-                <input id="store-url" type="url" name="store_url" value="<?= escape($cashfree['store_url']) ?>" placeholder="https://homevexa.online" required maxlength="512">
-                <label for="cashfree-id">Cashfree App ID</label>
-                <input id="cashfree-id" name="client_id" maxlength="512" spellcheck="false" placeholder="<?= $cashfree['client_id'] === '' ? 'Enter App ID' : 'Saved · leave blank to keep' ?>">
-                <label for="cashfree-secret">Cashfree Secret Key</label>
-                <input id="cashfree-secret" name="client_secret" type="password" maxlength="512" autocomplete="new-password" placeholder="<?= $cashfree['secret'] === '' ? 'Enter Secret Key' : 'Saved · leave blank to keep' ?>">
-                <small>Enter both credentials when changing modes. Finish pending online orders before switching modes.</small>
-                <button name="action" value="save_cashfree">Save Cashfree settings</button>
-            </form>
-        </details>
         <form method="get" class="filters">
             <label for="status">Payment status</label>
             <select name="status" id="status">
@@ -195,7 +157,7 @@ function pageUrl(int $page, string $status): string
                             <td><strong><?= escape($order['id']) ?></strong><small><?= escape($order['created_at']) ?></small><small><?= (int) $order['quantity'] ?> × <?= escape($order['product']) ?></small></td>
                             <td><?= escape($order['name']) ?><small><a href="tel:<?= escape($order['phone']) ?>"><?= escape($order['phone']) ?></a></small></td>
                             <td><span class="address"><?= escape($order['address']) ?></span><small><?= escape($order['city']) ?> <?= escape($order['pincode']) ?></small></td>
-                            <td><?= $order['payment'] === 'cod' ? 'Cash on delivery' : 'Cashfree' ?></td>
+                            <td><?= $order['payment'] === 'cod' ? 'Cash on delivery' : 'Online payment (historical)' ?></td>
                             <td>₹<?= (int) $order['amount'] ?></td>
                             <td><?= escape($statuses[$order['status']] ?? $order['status']) ?></td>
                         </tr>

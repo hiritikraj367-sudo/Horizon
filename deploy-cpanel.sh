@@ -16,7 +16,7 @@ if [[ "$(realpath "$document_root")" != "$(realpath "$account_home")/public_html
 fi
 
 install -d -m 0700 "$private_root"
-install -m 0600 "$repo/private/store.php" "$repo/private/cashfree-settings.php" "$repo/private/set-admin-hash.php" "$private_root/"
+install -m 0600 "$repo/private/store.php" "$repo/private/set-admin-hash.php" "$private_root/"
 
 install -m 0700 "$repo/private/set-admin-password.sh" "$private_root/"
 
@@ -30,4 +30,5 @@ declare(strict_types=1);
 require dirname(__DIR__) . '/homevexa-private/store.php';
 PHP
 cp -R "$stage/." "$document_root/"
+rm -f -- "$document_root/payment.php" "$document_root/webhook.php" "$private_root/cashfree-settings.php"
 printf 'Deployed Home Vexa to %s\n' "$document_root"
