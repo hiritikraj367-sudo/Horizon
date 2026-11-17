@@ -13,7 +13,12 @@ function renderOrderConfirmationEmail(array $order, string $deliveryWindow, stri
     <tr><td align="center" style="padding:24px 12px">
         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:560px;background:#fbfaf5;border:1px solid #e3e1d5;border-radius:16px">
             <tr><td style="padding:24px">
-                <p style="margin:0 0 16px;font-size:19px;font-weight:bold">Home Vexa</p>
+                <table role="presentation" cellspacing="0" cellpadding="0" style="margin-bottom:16px">
+                    <tr>
+                        <td valign="middle" style="padding-right:8px"><img src="https://homevexa.online/assets/home-vexa-email-logo.png" alt="" width="42" height="42" style="display:block;border:0"></td>
+                        <td valign="middle" style="font-size:19px;font-weight:bold;color:#344536">Home Vexa</td>
+                    </tr>
+                </table>
                 <h1 style="margin:0;font:30px/1.2 Georgia,serif">Thank you for your order!</h1>
                 <p>Your order is confirmed. You can pay when it arrives.</p>
                 <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
@@ -27,8 +32,8 @@ function renderOrderConfirmationEmail(array $order, string $deliveryWindow, stri
                     <tr><th scope="row" style="padding:8px">Payment</th><td style="padding:8px">Cash on delivery</td></tr>
                     <tr><th scope="row" style="padding:8px">Estimated delivery</th><td style="padding:8px"><?= escape($deliveryWindow) ?> (3–5 days)</td></tr>
                 </table>
-                <h2 style="margin:20px 0 6px;font:20px Georgia,serif">Delivery details</h2>
-                <p style="margin:0 0 24px;overflow-wrap:anywhere">
+                <h2 style="margin:20px 0 8px;font:20px Georgia,serif">Delivery address</h2>
+                <p style="margin:0 0 24px;padding:12px 14px;background:#f0f2e9;border:1px solid #dfe3d7;border-radius:8px;overflow-wrap:anywhere">
                             <strong><?= escape($order['name']) ?></strong><br>
                             <?= nl2br(escape($order['address'])) ?><br>
                             <?= escape($order['city']) ?> · <?= escape($order['pincode']) ?><br>

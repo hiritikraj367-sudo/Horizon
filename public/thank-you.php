@@ -59,7 +59,7 @@ $isPaid = $order && $order['status'] === 'paid';
         .he-confirmation-product img { width: 86px; height: 86px; flex: none; object-fit: cover; border-radius: 10px; }
         .he-confirmation-card h2 { margin: 0; font: 600 20px/1.25 Georgia, serif; }
         .he-confirmation-address { margin-top: 22px; }
-        .he-confirmation-address address { margin-top: 8px; font-style: normal; overflow-wrap: anywhere; }
+        .he-confirmation-address address { margin-top: 8px; padding: 14px; border: 1px solid #dfe3d7; border-radius: 10px; background: #f0f2e9; font-style: normal; overflow-wrap: anywhere; }
         .he-confirmation-link { display: inline-flex; min-height: 46px; margin-top: 24px; padding: 0 18px; align-items: center; gap: 12px; border-radius: 7px; background: #3b503d; color: #fffdf7; font-weight: 700; text-decoration: none; }
         .he-confirmation-link:hover { background: #2f4231; color: #fffdf7; }
     </style>
@@ -109,7 +109,7 @@ $isPaid = $order && $order['status'] === 'paid';
                 </dl>
                 <?php if ($showDeliveryAddress): ?>
                     <div class="he-confirmation-address">
-                        <h2>Delivery details</h2>
+                        <h2>Delivery address</h2>
                         <address>
                             <strong><?= escape($order['name']) ?></strong><br>
                             <?= nl2br(escape($order['address'])) ?><br>
