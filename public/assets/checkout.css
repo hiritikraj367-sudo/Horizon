@@ -32,7 +32,85 @@
   .he-review-avatar { flex-basis: 30px; width: 30px; height: 30px; }
 }
 
-@media (any-pointer: coarse), (max-width: 720px) {
-  .he-checkout .he-field input,
-  .he-checkout .he-field textarea { font-size: 16px; }
+
+.he-checkout {
+  width: min(36rem, calc(100vw - 24px));
+  max-height: min(92dvh, 880px);
+  overscroll-behavior: contain;
+  border-radius: 18px;
+}
+
+.he-checkout-inner { padding: clamp(18px, 4vw, 32px); }
+.he-checkout-close { width: 42px; height: 42px; background: #fbfaf5; }
+.he-checkout-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 48px 10px 0;
+  color: #344536;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.he-checkout h2 { font-size: clamp(2rem, 5vw, 2.625rem); }
+.he-checkout-description { margin: 8px 0 18px; color: #52604f; font-size: 1rem; }
+.he-checkout .he-order-summary {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid #dfe3d7;
+  border-radius: 12px;
+  background: #f0f2e9;
+}
+
+.he-checkout-photo { width: 60px; height: 60px; object-fit: cover; border-radius: 8px; }
+.he-order-summary h3 { margin: 0; font: 600 1rem/1.3 Arial, sans-serif; }
+.he-checkout .he-order-summary small { color: #52604f; font: 0.8125rem/1.35 Arial, sans-serif; }
+.he-checkout .he-order-summary > strong { font: 600 1.125rem/1.2 Arial, sans-serif; }
+
+.he-checkout-form { padding-top: 20px; }
+.he-checkout-section-title { margin: 0 0 12px; color: #344536; font: 600 1.25rem/1.25 Georgia, serif; }
+.he-checkout .he-form-grid { gap: 14px 12px; }
+.he-checkout .he-field { color: #344536; font-size: 0.875rem; font-weight: 600; letter-spacing: normal; }
+.he-checkout .he-field input,
+.he-checkout .he-field textarea {
+  min-width: 0;
+  min-height: 44px;
+  border-radius: 8px;
+  border-color: #d6dbce;
+  font-size: 16px;
+  font-weight: 400;
+}
+.he-checkout .he-field textarea { min-height: 72px; }
+.he-checkout .he-field input::placeholder,
+.he-checkout .he-field textarea::placeholder { color: #687063; }
+
+.he-checkout .he-form-total {
+  gap: 12px;
+  margin-top: 20px;
+  padding: 14px 0 0;
+  border-top: 1px solid #dfe3d7;
+  color: #344536;
+  font-size: 1rem;
+  font-weight: 700;
+}
+.he-form-total small { display: block; margin-top: 3px; color: #52604f; font-size: 0.875rem; font-weight: 400; }
+.he-checkout .he-form-total strong { font: 600 1.5rem/1.2 Georgia, serif; }
+.he-checkout .he-submit-button {
+  justify-content: center;
+  gap: 10px;
+  min-height: 50px;
+  margin-top: 14px;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: normal;
+  text-transform: none;
+}
+.he-checkout .he-demo-disclaimer,
+.he-checkout #checkout-status { font-size: 0.875rem; line-height: 1.5; }
+
+@media (max-width: 420px) {
+  .he-checkout .he-form-grid { grid-template-columns: minmax(0, 1fr); }
 }

@@ -585,7 +585,7 @@ $_SESSION['checkout_token'] ??= bin2hex(random_bytes(32));
 </dialog>
 <dialog class="he-checkout" aria-labelledby="checkout-title" aria-describedby="checkout-description">
 <div class="he-checkout-inner">
-<button class="he-checkout-close" aria-label="Close checkout">
+<button class="he-checkout-close" type="button" aria-label="Close checkout" autofocus>
 <svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x" aria-hidden="true">
 <path d="M18 6 6 18">
 </path>
@@ -593,25 +593,24 @@ $_SESSION['checkout_token'] ??= bin2hex(random_bytes(32));
 </path>
 </svg>
 </button>
-<p class="he-eyebrow">Home Vexa · Set of 5</p>
-<h2 id="checkout-title">A happier sink<br/>
-<em>starts here.</em>
-</h2>
+<div class="he-checkout-brand">
+  <img src="./assets/home-vexa-mark.svg" width="26" height="26" alt="">
+  <span>Home Vexa</span>
+</div>
+<h2 id="checkout-title">Checkout</h2>
 <p id="checkout-description" class="he-checkout-description">Enter your delivery details and pay when your order arrives.</p>
-<div class="he-order-summary">
-<div>
-<span>Silicone scrubber set</span>
-<small>5 reusable scrubbers</small>
-</div>
-<span class="he-price-pair he-price-pair--compact" role="group" aria-label="MRP ₹999, cash on delivery price ₹239, 76% off.">
-<del>₹999</del>
-<strong>₹239</strong>
-<span class="he-price-discount">76% OFF</span>
-</span>
-</div>
+<section class="he-order-summary" aria-label="Order summary">
+  <img class="he-checkout-photo" src="./assets/01.webp" width="60" height="60" alt="">
+  <div>
+    <h3>Silicone Scrubber Set</h3>
+    <small>1 set · 5 reusable scrubbers</small>
+  </div>
+  <strong>₹<?= COD_PRICE ?></strong>
+</section>
 <form class="he-checkout-form" action="./order.php" method="post">
 <input type="hidden" name="token" value="<?= escape($_SESSION['checkout_token']) ?>">
 <input type="hidden" name="request_id" value="<?= escape(bin2hex(random_bytes(16))) ?>">
+<h3 class="he-checkout-section-title">Delivery details</h3>
 <div class="he-form-grid">
 <label class="he-field">Full name<input autoComplete="name" placeholder="Your name" required="" name="name" maxlength="100"/>
 </label>
@@ -628,14 +627,13 @@ $_SESSION['checkout_token'] ??= bin2hex(random_bytes(32));
 </label>
 </div>
 <div class="he-form-total">
-<span>Total · cash on delivery</span>
-<span class="he-price-pair he-price-pair--compact" role="group" aria-label="MRP ₹999, cash on delivery price ₹239, 76% off.">
-<del>₹999</del>
-<strong>₹239</strong>
-<span class="he-price-discount">76% OFF</span>
-</span>
+  <div>
+    <span>Total to pay</span>
+    <small>Cash on delivery</small>
+  </div>
+  <strong>₹<?= COD_PRICE ?></strong>
 </div>
-<button class="he-buy-button he-submit-button" type="submit">Place COD order<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-right" aria-hidden="true">
+<button class="he-buy-button he-submit-button" type="submit">Place COD order <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-right" aria-hidden="true">
 <path d="M5 12h14">
 </path>
 <path d="m12 5 7 7-7 7">
