@@ -99,6 +99,40 @@ function orderById(string $id): ?array
     return $query->fetch(PDO::FETCH_ASSOC) ?: null;
 }
 
+function sendOrderConfirmation(string $email, array $order): void
+{
+    $reference = $order['id'];
+    $amount = (int) $order['amount'];
+    $message = implode("\n", [
+        'Thank you for shopping with Home Vexa!',
+        '',
+        'Your cash on delivery order is confirmed.',
+        'Order reference: ' . $reference,
+        'Product: ' . $order['product'],
+        'Amount due on delivery: INR ' . $amount,
+        '',
+        'View your confirmation:',
+        'https://homevexa.online/thank-you.php?order_id=' . rawurlencode($reference),
+        '',
+        'Home Vexa',
+    ]);
+    $headers = [
+        'From' => 'Home Vexa <orders@homevexa.online>',
+        'MIME-Version' => '1.0',
+        'Content-Type' => 'text/plain; charset=UTF-8',
+    ];
+
+    try {
+        if (function_exists('mail') && @mail($email, 'Home Vexa order confirmation', $message, $headers)) {
+            return;
+        }
+    } catch (Throwable $e) {
+        error_log('Home Vexa confirmation mail error: ' . get_class($e));
+    }
+
+    error_log('Home Vexa confirmation mail could not be queued for order ' . $reference);
+}
+
 function jsonResponse(int $status, array $body): never
 {
     http_response_code($status);

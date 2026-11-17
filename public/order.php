@@ -18,6 +18,10 @@ if ($token === '' || !hash_equals($token, $input('token'))) {
 
 $name = $input('name');
 $phone = $input('phone');
+$email = $input('email');
+if ($email !== '' && (strlen($email) > 254 || !filter_var($email, FILTER_VALIDATE_EMAIL))) {
+    jsonResponse(422, ['error' => 'Enter a valid email address or leave the email field blank.']);
+}
 $address = $input('address');
 $city = $input('city');
 $pincode = $input('pincode');
@@ -53,6 +57,11 @@ try {
         if ($order[$field] !== $$field) {
             jsonResponse(409, ['error' => 'This checkout already has an order. Reload to start a new one.']);
         }
+    }
+
+    // Only the request that inserted this order sends the confirmation.
+    if ($email !== '' && $order['id'] === $id) {
+        sendOrderConfirmation($email, $order);
     }
 
     jsonResponse(200, ['order_id' => $order['id'], 'status' => $order['status'], 'amount' => $order['amount']]);

@@ -617,6 +617,8 @@ $_SESSION['checkout_token'] ??= bin2hex(random_bytes(32));
 </label>
 <label class="he-field">Mobile number<input type="tel" inputMode="numeric" autoComplete="tel-national" placeholder="10-digit mobile number" pattern="[0-9]{10}" maxLength="10" required="" name="phone"/>
 </label>
+<label class="he-field he-field-wide">Email (optional)<input type="email" autocomplete="email" placeholder="For your order confirmation" name="email" maxlength="254"/>
+</label>
 <label class="he-field he-field-wide">Full delivery address<textarea maxlength="500" name="address" autoComplete="street-address" placeholder="House no., street, area" rows="2" required="">
 </textarea>
 </label>
