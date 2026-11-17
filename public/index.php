@@ -10,7 +10,7 @@ $_SESSION['checkout_token'] ??= bin2hex(random_bytes(32));
 <head>
 <meta charSet="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<link rel="stylesheet" href="./assets/store.css" data-precedence="next"/>
+<link rel="stylesheet" href="./assets/store.css?v=<?= filemtime(__DIR__ . '/assets/store.css') ?>" data-precedence="next"/>
 <meta name="theme-color" content="#f7f5ef"/>
 <meta name="color-scheme" content="light"/>
 <title>Branded Silicone Scrubbers | Home Vexa</title>
