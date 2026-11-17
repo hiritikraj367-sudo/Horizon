@@ -116,14 +116,20 @@ function sendOrderConfirmation(string $email, array $order): void
         '',
         'Home Vexa',
     ]);
+    $sender = 'orders@homevexa.online';
     $headers = [
-        'From' => 'Home Vexa <orders@homevexa.online>',
+        'From' => 'Home Vexa <' . $sender . '>',
         'MIME-Version' => '1.0',
         'Content-Type' => 'text/plain; charset=UTF-8',
     ];
 
     try {
-        if (function_exists('mail') && @mail($email, 'Home Vexa order confirmation', $message, $headers)) {
+        if (!function_exists('mail')) {
+            error_log('Home Vexa confirmation mail unavailable: PHP mail() is disabled for order ' . $reference);
+            return;
+        }
+        if (@mail($email, 'Home Vexa order confirmation', $message, $headers, '-f' . $sender)) {
+            error_log('Home Vexa confirmation mail accepted by local mailer for order ' . $reference);
             return;
         }
     } catch (Throwable $e) {
