@@ -527,11 +527,11 @@ $_SESSION['checkout_token'] ??= bin2hex(random_bytes(32));
 <img alt="" loading="lazy" width="28" height="28" decoding="async" data-nimg="1" class="he-brand-symbol" style="color:transparent" src="./assets/home-vexa-mark.svg"/>Home Vexa</a>
 <p>EVERYDAY HOME ESSENTIALS</p>
 <nav class="he-footer-links" aria-label="Store information">
-<a href="https://homevexa.online/about-us">About Us</a>
-<a href="https://homevexa.online/contact-us">Contact Us</a>
-<a href="https://homevexa.online/privacy-policy">Privacy Policy</a>
-<a href="https://homevexa.online/terms-and-conditions">Terms &amp; Conditions</a>
-<a href="https://homevexa.online/refund-returns">Refunds &amp; Returns</a>
+<a href="./about-us/">About Us</a>
+<a href="./contact-us/">Contact Us</a>
+<a href="./privacy-policy/">Privacy Policy</a>
+<a href="./terms-and-conditions/">Terms &amp; Conditions</a>
+<a href="./refund-returns/">Refunds &amp; Returns</a>
 </nav>
 <a href="#product">Back to the scrubbers ↑</a>
 </footer>
