@@ -79,6 +79,32 @@ function renderReviews(index) {
 const [previousReview, nextReview] = document.querySelectorAll('.he-review-nav-button');
 previousReview.addEventListener('click', () => renderReviews(reviewIndex - 1));
 nextReview.addEventListener('click', () => renderReviews(reviewIndex + 1));
+const reviewCarousel = document.querySelector('.he-reviews-swiper');
+let reviewTouchStart;
+
+reviewCarousel.addEventListener('touchstart', event => {
+  reviewTouchStart = event.touches.length === 1 ? event.touches[0] : null;
+}, { passive: true });
+
+reviewCarousel.addEventListener('touchcancel', () => {
+  reviewTouchStart = null;
+}, { passive: true });
+
+reviewCarousel.addEventListener('touchend', event => {
+  const start = reviewTouchStart;
+  reviewTouchStart = null;
+  if (!start || event.touches.length > 0) return;
+
+  const end = event.changedTouches[0];
+  if (!end || end.identifier !== start.identifier) return;
+
+  const horizontalDistance = end.clientX - start.clientX;
+  const verticalDistance = end.clientY - start.clientY;
+  if (Math.abs(horizontalDistance) >= 50 && Math.abs(horizontalDistance) > Math.abs(verticalDistance)) {
+    renderReviews(reviewIndex + (horizontalDistance < 0 ? 1 : -1));
+  }
+}, { passive: true });
+
 showTwoReviews.addEventListener('change', () => renderReviews(reviewIndex));
 renderReviews(0);
 
