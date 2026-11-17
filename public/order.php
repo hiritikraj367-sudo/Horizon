@@ -34,7 +34,9 @@ if ($payment === 'cashfree' && !cashfreeEnabled()) {
 }
 
 try {
+    $stage = 'database_connection';
     $db = orderDatabase();
+    $stage = 'order_save';
     $id = 'HV-' . bin2hex(random_bytes(12));
     $status = $payment === 'cod' ? 'cod_confirmed' : 'pending_payment';
     // Bind retries to the browser session so one checkout cannot retrieve another checkout's result.
@@ -64,6 +66,7 @@ try {
     $id = $order['id'];
     $session = $order['payment_session'];
     if (!$session) {
+        $stage = 'cashfree_create_order';
         $storeUrl = cashfreeSettings()['store_url'];
         try {
             $remote = cashfreeRequest('/orders', [
@@ -74,19 +77,34 @@ try {
                     'notify_url' => $storeUrl . '/webhook.php',
                 ],
             ]);
-        } catch (RuntimeException) {
+        } catch (CashfreeRequestException $createError) {
             // A network retry may come after the gateway already created this order.
-            $remote = cashfreeRequest('/orders/' . rawurlencode($id));
+            try {
+                $remote = cashfreeRequest('/orders/' . rawurlencode($id));
+            } catch (Throwable) {
+                throw $createError;
+            }
         }
+        $stage = 'cashfree_session_response';
         $session = $remote['payment_session_id'] ?? '';
         if (!is_string($session) || $session === '') {
             throw new RuntimeException('Cashfree session missing');
         }
+        $stage = 'payment_session_save';
         $update = $db->prepare('UPDATE orders SET payment_session = ? WHERE id = ?');
         $update->execute([$session, $id]);
     }
     jsonResponse(200, ['order_id' => $id, 'status' => 'pending_payment', 'session' => $session, 'mode' => cashfreeMode()]);
 } catch (Throwable $e) {
-    error_log('Home Vexa checkout failed: ' . get_class($e));
-    jsonResponse(503, ['error' => 'Checkout could not complete. Please try again.']);
+    $diagnostic = ['stage' => $stage];
+    if ($e instanceof CashfreeRequestException) {
+        $diagnostic['cashfree_http_status'] = $e->httpStatus;
+        $diagnostic['curl_errno'] = $e->curlNumber;
+        $diagnostic['cashfree_code'] = $e->gatewayCode;
+    }
+    error_log('Home Vexa checkout failed at ' . $stage . ': ' . get_class($e));
+    jsonResponse(503, [
+        'error' => 'Checkout could not complete. Please try again.',
+        'diagnostic' => $diagnostic,
+    ]);
 }

@@ -104,6 +104,17 @@ function cashfreeMode(): string
     return cashfreeSettings()['mode'];
 }
 
+final class CashfreeRequestException extends RuntimeException
+{
+    public function __construct(
+        public readonly int $httpStatus,
+        public readonly int $curlNumber,
+        public readonly string $gatewayCode
+    ) {
+        parent::__construct('Cashfree request failed with status ' . $httpStatus);
+    }
+}
+
 function cashfreeRequest(string $endpoint, ?array $body = null): array
 {
     if (!cashfreeEnabled()) {
@@ -140,7 +151,7 @@ function cashfreeRequest(string $endpoint, ?array $body = null): array
             $curlError,
             $safeCode
         ));
-        throw new RuntimeException('Cashfree request failed with status ' . $status);
+        throw new CashfreeRequestException($status, $curlError, $safeCode);
     }
     return json_decode($raw, true, 512, JSON_THROW_ON_ERROR);
 }
