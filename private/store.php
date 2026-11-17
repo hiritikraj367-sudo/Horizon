@@ -151,6 +151,19 @@ function cashfreeRequest(string $endpoint, ?array $body = null): array
             $curlError,
             $safeCode
         ));
+        $message = $details['message'] ?? null;
+        if ($body !== null && is_string($message) && $message !== '') {
+            $settings = cashfreeSettings();
+            $sensitiveValues = array_filter([
+                $settings['client_id'],
+                $settings['secret'],
+                $body['customer_details']['customer_name'] ?? '',
+                $body['customer_details']['customer_phone'] ?? '',
+            ], static fn(string $value): bool => $value !== '');
+            $message = str_ireplace($sensitiveValues, '[redacted]', $message);
+            $message = preg_replace('/[[:cntrl:]]+/', ' ', $message) ?? '';
+            error_log('Home Vexa Cashfree create order message: ' . substr($message, 0, 350));
+        }
         throw new CashfreeRequestException($status, $curlError, $safeCode);
     }
     return json_decode($raw, true, 512, JSON_THROW_ON_ERROR);
