@@ -139,7 +139,9 @@ form.addEventListener('submit', async event => {
     }
     completed = true;
     [...form.querySelectorAll('input, textarea, button')].forEach(element => { element.disabled = true; });
-    window.location.assign('./thank-you.php?order_id=' + encodeURIComponent(result.order_id));
+    const confirmation = new URLSearchParams({ order_id: result.order_id });
+    if (result.confirmation_token) confirmation.set('access', result.confirmation_token);
+    window.location.assign('./thank-you.php?' + confirmation);
   } catch (error) {
     feedback.textContent = error.message || 'Checkout could not complete. Try again.';
   } finally {

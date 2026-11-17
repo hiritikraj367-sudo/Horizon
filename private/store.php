@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
 
+require_once __DIR__ . '/order-confirmation-email.php';
+
 const COD_PRICE = 239;
 
 function escape(string $value): string
@@ -99,28 +101,27 @@ function orderById(string $id): ?array
     return $query->fetch(PDO::FETCH_ASSOC) ?: null;
 }
 
+function orderConfirmationToken(array $order): string
+{
+    return hash_hmac('sha256', 'confirmation:' . $order['id'], $order['request_id']);
+}
+
+function orderDeliveryWindow(array $order): string
+{
+    $date = new DateTimeImmutable($order['created_at'], new DateTimeZone('UTC'));
+    $local = $date->setTimezone(new DateTimeZone('Asia/Kolkata'));
+    return $local->modify('+3 days')->format('j M Y') . ' – ' . $local->modify('+5 days')->format('j M Y');
+}
+
 function sendOrderConfirmation(string $email, array $order): void
 {
     $reference = $order['id'];
-    $amount = (int) $order['amount'];
-    $message = implode("\n", [
-        'Thank you for shopping with Home Vexa!',
-        '',
-        'Your cash on delivery order is confirmed.',
-        'Order reference: ' . $reference,
-        'Product: ' . $order['product'],
-        'Amount due on delivery: INR ' . $amount,
-        '',
-        'View your confirmation:',
-        'https://homevexa.online/thank-you.php?order_id=' . rawurlencode($reference),
-        '',
-        'Home Vexa',
-    ]);
     $sender = 'orders@homevexa.online';
     $headers = [
         'From' => 'Home Vexa <' . $sender . '>',
         'MIME-Version' => '1.0',
-        'Content-Type' => 'text/plain; charset=UTF-8',
+        'Content-Type' => 'text/html; charset=UTF-8',
+        'Content-Transfer-Encoding' => 'quoted-printable',
     ];
 
     try {
@@ -128,6 +129,11 @@ function sendOrderConfirmation(string $email, array $order): void
             error_log('Home Vexa confirmation mail unavailable: PHP mail() is disabled for order ' . $reference);
             return;
         }
+        $url = 'https://homevexa.online/thank-you.php?' . http_build_query([
+            'order_id' => $reference,
+            'access' => orderConfirmationToken($order),
+        ]);
+        $message = quoted_printable_encode(renderOrderConfirmationEmail($order, orderDeliveryWindow($order), $url));
         if (@mail($email, 'Home Vexa order confirmation', $message, $headers, '-f' . $sender)) {
             error_log('Home Vexa confirmation mail accepted by local mailer for order ' . $reference);
             return;

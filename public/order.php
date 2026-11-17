@@ -64,7 +64,12 @@ try {
         sendOrderConfirmation($email, $order);
     }
 
-    jsonResponse(200, ['order_id' => $order['id'], 'status' => $order['status'], 'amount' => $order['amount']]);
+    jsonResponse(200, [
+        'order_id' => $order['id'],
+        'status' => $order['status'],
+        'amount' => $order['amount'],
+        'confirmation_token' => orderConfirmationToken($order),
+    ]);
 } catch (Throwable $e) {
     $diagnostic = ['stage' => $stage];
     error_log('Home Vexa checkout failed at ' . $stage . ': ' . get_class($e));

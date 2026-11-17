@@ -4,13 +4,19 @@ declare(strict_types=1);
 require __DIR__ . '/bootstrap.php';
 
 header('Cache-Control: no-store');
+header('Referrer-Policy: no-referrer');
 header('X-Robots-Tag: noindex, nofollow');
 $id = is_string($_GET['order_id'] ?? null) ? $_GET['order_id'] : '';
+$access = is_string($_GET['access'] ?? null) ? $_GET['access'] : '';
 $order = null;
+$showDeliveryAddress = false;
+$deliveryWindow = '';
 $message = 'A confirmed order could not be found.';
 try {
     $candidate = orderById($id);
     if ($candidate && in_array($candidate['status'], ['cod_confirmed', 'paid'], true)) {
+        $deliveryWindow = orderDeliveryWindow($candidate);
+        $showDeliveryAddress = hash_equals(orderConfirmationToken($candidate), $access);
         $order = $candidate;
         $message = $order['status'] === 'cod_confirmed'
             ? 'Your order is confirmed. You can pay when it arrives.'
@@ -49,6 +55,11 @@ $isPaid = $order && $order['status'] === 'paid';
         .he-confirmation-details > div { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 12px; }
         .he-confirmation-details dt { color: #52604f; }
         .he-confirmation-details dd { min-width: 0; margin: 0; color: #344536; font-weight: 700; overflow-wrap: anywhere; }
+        .he-confirmation-product { display: flex; align-items: center; gap: 16px; margin-top: 24px; }
+        .he-confirmation-product img { width: 86px; height: 86px; flex: none; object-fit: cover; border-radius: 10px; }
+        .he-confirmation-card h2 { margin: 0; font: 600 20px/1.25 Georgia, serif; }
+        .he-confirmation-address { margin-top: 22px; }
+        .he-confirmation-address address { margin-top: 8px; font-style: normal; overflow-wrap: anywhere; }
         .he-confirmation-link { display: inline-flex; min-height: 46px; margin-top: 24px; padding: 0 18px; align-items: center; gap: 12px; border-radius: 7px; background: #3b503d; color: #fffdf7; font-weight: 700; text-decoration: none; }
         .he-confirmation-link:hover { background: #2f4231; color: #fffdf7; }
     </style>
@@ -75,6 +86,13 @@ $isPaid = $order && $order['status'] === 'paid';
             <h1 id="confirmation-title"><?= escape($title) ?></h1>
             <p class="he-confirmation-message"><?= escape($message) ?></p>
             <?php if ($order): ?>
+                <div class="he-confirmation-product">
+                    <img src="./assets/01.webp" alt="<?= escape($order['product']) ?>" width="86" height="86">
+                    <div>
+                        <h2><?= escape($order['product']) ?></h2>
+                        <p>Quantity <?= (int) $order['quantity'] ?> · ₹<?= number_format((int) $order['amount']) ?> total</p>
+                    </div>
+                </div>
                 <dl class="he-confirmation-details">
                     <div>
                         <dt>Order reference</dt>
@@ -84,7 +102,22 @@ $isPaid = $order && $order['status'] === 'paid';
                         <dt>Payment</dt>
                         <dd><?= $isPaid ? 'Paid online' : 'Cash on delivery' ?></dd>
                     </div>
+                    <div>
+                        <dt>Estimated delivery</dt>
+                        <dd><?= escape($deliveryWindow) ?> (3–5 days)</dd>
+                    </div>
                 </dl>
+                <?php if ($showDeliveryAddress): ?>
+                    <div class="he-confirmation-address">
+                        <h2>Delivery details</h2>
+                        <address>
+                            <strong><?= escape($order['name']) ?></strong><br>
+                            <?= nl2br(escape($order['address'])) ?><br>
+                            <?= escape($order['city']) ?> · <?= escape($order['pincode']) ?><br>
+                            <?= escape($order['phone']) ?>
+                        </address>
+                    </div>
+                <?php endif ?>
             <?php endif ?>
             <a class="he-confirmation-link" href="./">Back to the store <span aria-hidden="true">→</span></a>
         </section>
