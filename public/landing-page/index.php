@@ -5,6 +5,8 @@ require dirname(__DIR__, 2) . '/private/landing-data.php';
 $landing = landingCurrent();
 if (!$landing) { http_response_code(404); exit('Landing page not found'); }
 $ld = json_decode($landing['data_json'], true) ?: [];
+$gallery = preg_split('/\\r?\\n/', trim((string)($ld['gallery'] ?? ''))) ?: [];
+foreach (array_slice($gallery,0,8) as $i=>$url) { if (filter_var(trim($url), FILTER_VALIDATE_URL) && str_starts_with(trim($url),'https://')) $ld['image_'.str_pad((string)($i+1),2,'0',STR_PAD_LEFT)] = trim($url); }
 function lv(string $key, string $fallback): string { global $ld; return escape(trim((string)($ld[$key] ?? '')) ?: $fallback); }
 function lp(): int { global $ld; return max(1,(int)($ld['price'] ?? 239)); }
 startCheckout();
@@ -79,7 +81,7 @@ $_SESSION['checkout_token'] ??= bin2hex(random_bytes(32));
 <span>/</span>
 <span>Kitchen essentials</span>
 <span>/</span>
-<span>Silicone scrubber set</span>
+<span><?= lv("title",$landing["title"]) ?></span>
 </div>
 <section class="he-product" id="product">
 <div class="he-gallery" aria-label="Product gallery">
@@ -145,7 +147,7 @@ $_SESSION['checkout_token'] ??= bin2hex(random_bytes(32));
 </path>
 </svg>
 </button>
-<span class="he-image-caption">Five little helpers, one happy sink.</span>
+<span class="he-image-caption"><?= lv("description","Five little helpers, one happy sink.") ?></span>
 </div>
 <div class="he-thumbnails" role="group" aria-label="Choose a product photo">
 <button class="he-thumbnail is-active" aria-label="Show product photo 1: Five-piece set" aria-pressed="true">
