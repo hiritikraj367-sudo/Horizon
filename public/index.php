@@ -534,6 +534,11 @@ $_SESSION['checkout_token'] ??= bin2hex(random_bytes(32));
 <a href="./refund-returns/">Refunds &amp; Returns</a>
 </nav>
 <a href="#product">Back to the scrubbers ↑</a>
+<div class="he-footer-contact" style="width:100%;text-align:center;padding:16px 12px 0;line-height:1.8;font-size:14px;">
+<strong>Contact Us</strong><br>
+Email: <a href="mailto:hiritikrha367@gmail.com">hiritikrha367@gmail.com</a><br>
+Phone: <a href="tel:+918789913840">+91 8789913840</a>
+</div>
 </footer>
 <div class="he-mobile-buy">
 <div>
