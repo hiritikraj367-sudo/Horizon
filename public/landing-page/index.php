@@ -22,7 +22,7 @@ $_SESSION['checkout_token'] ??= bin2hex(random_bytes(32));
 <meta name="theme-color" content="#f7f5ef"/>
 <meta name="color-scheme" content="light"/>
 <title><?= lv("seo_title",$landing["title"]." | Home Vexa") ?></title>
-<meta name="description" content="Home Vexa — Everyday Home Essentials. Five colorful reusable silicone dish scrubbers, ₹<?= lp() ?> down from ₹<?= lv("mrp","999") ?>."/>
+<meta name="description" content="<?= lv("seo_description", $landing["title"]." — Home Vexa") ?>"/>
 <meta name="generator" content="v0.app"/>
 <link rel="icon" href="/assets/home-vexa-mark.svg" media="(prefers-color-scheme: light)"/>
 <link rel="icon" href="/assets/home-vexa-mark.svg" media="(prefers-color-scheme: dark)"/>
