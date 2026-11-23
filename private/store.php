@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/order-confirmation-email.php';
+require_once __DIR__ . '/cashfree.php';
 
 const COD_PRICE = 239;
 
