@@ -61,7 +61,7 @@ try {
 
     if ($payment === 'cashfree') {
         $stage = 'cashfree_create';
-        $session = cashfreeRequest('POST', 'orders', [
+        $session = $order['id'] !== $id ? cashfreeRequest('GET', 'orders/' . rawurlencode($order['id'])) : cashfreeRequest('POST', 'orders', [
             'order_id' => $order['id'],
             'order_amount' => (float) $order['amount'],
             'order_currency' => 'INR',
