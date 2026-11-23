@@ -3,6 +3,9 @@
 No Cashfree credentials, no live requests, no real charges.
 """
 import http.cookiejar
+import base64
+import hashlib
+import hmac
 import json
 import os
 import pathlib
@@ -36,7 +39,8 @@ if ($path === '/pg/orders' && $method === 'POST') {
     if (is_file($file)) { http_response_code(409); echo json_encode(['code'=>'duplicate_order']); exit; }
     $record = ['order_id'=>$id, 'order_amount'=>$input['order_amount'], 'order_currency'=>'INR',
         'order_status'=>'ACTIVE', 'payment_session_id'=>'session_test_' . $id,
-        'return_url'=>$input['order_meta']['return_url']];
+        'return_url'=>$input['order_meta']['return_url'],
+        'notify_url'=>$input['order_meta']['notify_url'] ?? null];
     file_put_contents($file, json_encode($record)); http_response_code(201);
     echo json_encode($record); exit;
 }
@@ -68,6 +72,15 @@ def request(opener, url, form=None):
             return response.status, dict(response.headers), response.read().decode()
     except urllib.error.HTTPError as err:
         return err.code, dict(err.headers), err.read().decode()
+
+
+def post_raw(opener, url, payload, headers):
+    req = urllib.request.Request(url, data=payload, headers=headers, method='POST')
+    try:
+        with opener.open(req, timeout=15) as response:
+            return response.status, response.read().decode()
+    except urllib.error.HTTPError as err:
+        return err.code, err.read().decode()
 
 
 def wait_port(port):
@@ -164,6 +177,38 @@ def main():
             status, _, raw = request(opener, base + 'order.php', form2)
             check(status == 200 and json.loads(raw)['status'] == 'test_pending',
                 'Retry recreates gateway order after prior creation failed')
+            retry_id = json.loads(raw)['order_id']
+            retry_record_path = mock / 'records' / (retry_id + '.json')
+            retry_record = json.loads(retry_record_path.read_text())
+            check(retry_record['notify_url'] == 'https://homevexa.online/cashfree-webhook.php',
+                'New gateway orders include signed webhook callback URL')
+            pending_url = base + 'thank-you.php?' + urllib.parse.urlsplit(retry_record['return_url']).query
+            status, _, _ = request(opener, pending_url)
+            check(status == 404, 'Pending order cannot access paid confirmation')
+            retry_record['order_status'] = 'PAID'
+            retry_record_path.write_text(json.dumps(retry_record))
+            event = {'type': 'PAYMENT_SUCCESS_WEBHOOK',
+                'data': {'order': {'order_id': retry_id}, 'payment': {'payment_status': 'SUCCESS'}}}
+            event_bytes = json.dumps(event, separators=(',', ':')).encode()
+            timestamp = str(int(time.time()))
+            good_signature = base64.b64encode(hmac.new(
+                b'TEST_SECRET', timestamp.encode() + event_bytes, hashlib.sha256).digest()).decode()
+            url = base + 'cashfree-webhook.php'
+            status, _ = post_raw(opener, url, event_bytes, {
+                'Content-Type': 'application/json', 'x-webhook-timestamp': timestamp,
+                'x-webhook-signature': 'invalid'})
+            check(status == 401, 'Forged webhook signature rejected')
+            status, _, _ = request(opener, pending_url)
+            check(status == 404, 'Forged webhook cannot mark order paid')
+            headers = {'Content-Type': 'application/json', 'x-webhook-timestamp': timestamp,
+                'x-webhook-signature': good_signature}
+            status, _ = post_raw(opener, url, event_bytes, headers)
+            check(status == 200, 'Signed webhook verifies provider and updates order')
+            status, _, html = request(opener, pending_url)
+            check(status == 200 and 'Test payment completed' in html,
+                'Webhook handles browser-not-returned payment')
+            status, _ = post_raw(opener, url, event_bytes, headers)
+            check(status == 200, 'Repeated signed webhook is idempotent')
             form3 = dict(form, request_id=secrets.token_hex(16), payment='cod')
             status, _, raw = request(opener, base + 'order.php', form3)
             check(status == 200 and json.loads(raw)['status'] == 'cod_confirmed',
