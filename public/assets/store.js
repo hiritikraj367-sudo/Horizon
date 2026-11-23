@@ -123,6 +123,15 @@ save.addEventListener('click', () => {
   try { localStorage.setItem('home-vexa-saved', saved ? '1' : '0'); } catch {}
 });
 
+const paymentInputs = [...form.querySelectorAll('input[name="payment"]')];
+const paymentCaption = document.querySelector('#he-payment-caption');
+function updatePaymentChoice() {
+  const online = form.querySelector('input[name="payment"]:checked')?.value === 'cashfree';
+  submit.firstChild.textContent = online ? 'Pay online ' : 'Place COD order ';
+  paymentCaption.textContent = online ? 'Secure online payment' : 'Cash on delivery';
+}
+paymentInputs.forEach(input => input.addEventListener('change', updatePaymentChoice));
+
 form.addEventListener('submit', async event => {
   event.preventDefault();
   if (completed || submit.disabled) return;
@@ -134,6 +143,12 @@ form.addEventListener('submit', async event => {
     const response = await fetch(form.action, { method: 'POST', body: data });
     const result = await response.json();
     if (!response.ok) throw new Error(result.error || 'Order could not be saved. Try again.');
+    if (result.status === 'payment_pending' && result.payment_session_id) {
+      if (typeof Cashfree !== 'function') throw new Error('Payment checkout could not load. Please try again.');
+      const gateway = Cashfree({ mode: 'production' });
+      await gateway.checkout({ paymentSessionId: result.payment_session_id, redirectTarget: '_self' });
+      return;
+    }
     if (result.status !== 'cod_confirmed' || !result.order_id) {
       throw new Error('Order confirmation could not be retrieved. Please try again.');
     }
@@ -150,3 +165,4 @@ form.addEventListener('submit', async event => {
     if (!feedback.hidden) feedback.scrollIntoView({ block: 'nearest' });
   }
 });
+
