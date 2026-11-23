@@ -38,18 +38,21 @@ if ($name === '' || strlen($name) > 300 || $address === '' || strlen($address) >
     jsonResponse(422, ['error' => 'Check your delivery details, 10-digit mobile number and 6-digit PIN.']);
 }
 try {
+    $stage = 'cashfree_configuration';
+    $cashfreeMode = $payment === 'cashfree' ? cashfreeEnvironment() : null;
+    $storedPayment = $cashfreeMode === 'sandbox' ? 'cashfree_test' : $payment;
     $stage = 'database_connection';
     $db = orderDatabase();
     $stage = 'order_save';
     $id = 'HV-' . bin2hex(random_bytes(12));
-    $status = $payment === 'cod' ? 'cod_confirmed' : 'payment_pending';
+    $status = $storedPayment === 'cod' ? 'cod_confirmed' : ($storedPayment === 'cashfree_test' ? 'test_pending' : 'payment_pending');
     // Bind retries to the browser session so one checkout cannot retrieve another checkout's result.
     $requestKey = hash_hmac('sha256', $requestId, $token);
     $insert = $db->prepare('INSERT INTO orders
         (id, request_id, name, phone, address, city, pincode, product, quantity, payment, amount, status)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE request_id = request_id');
     $insert->execute([$id, $requestKey, $name, $phone, $address, $city, $pincode,
-        'Silicone scrubber set', 1, $payment, COD_PRICE, $status]);
+        'Silicone scrubber set', 1, $storedPayment, COD_PRICE, $status]);
 
     $query = $db->prepare('SELECT * FROM orders WHERE request_id = ?');
     $query->execute([$requestKey]);
@@ -58,7 +61,7 @@ try {
         throw new RuntimeException('Order could not be retrieved');
     }
     foreach (['name', 'phone', 'address', 'city', 'pincode', 'payment'] as $field) {
-        if ($order[$field] !== $$field) {
+        if ($order[$field] !== ($field === 'payment' ? $storedPayment : $field)) {
             jsonResponse(409, ['error' => 'This checkout already has an order. Reload to start a new one.']);
         }
     }
@@ -84,7 +87,8 @@ try {
         }
         jsonResponse(200, [
             'order_id' => $order['id'],
-            'status' => 'payment_pending',
+            'status' => $status,
+            'cashfree_mode' => $cashfreeMode,
             'payment_session_id' => $session['payment_session_id'],
         ]);
     }
@@ -107,7 +111,7 @@ try {
         $message = $e->getMessage();
         if (str_starts_with($message, 'Cashfree request failed (HTTP ') ||
             str_starts_with($message, 'Cashfree configuration missing') ||
-            str_starts_with($message, 'Invalid Cashfree production configuration') ||
+            str_starts_with($message, 'Invalid Cashfree configuration') ||
             $message === 'Cashfree session not returned') {
             $diagnostic['reason'] = $message;
         } else {
