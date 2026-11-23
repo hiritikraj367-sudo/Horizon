@@ -1,0 +1,5 @@
+{
+  "environment": "sandbox",
+  "app_id": "YOUR_CASHFREE_TEST_APP_ID",
+  "secret_key": "YOUR_CASHFREE_TEST_SECRET_KEY"
+}
