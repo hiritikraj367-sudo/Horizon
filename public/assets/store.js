@@ -128,7 +128,8 @@ const paymentCaption = document.querySelector('#he-payment-caption');
 function updatePaymentChoice() {
   const online = form.querySelector('input[name="payment"]:checked')?.value === 'cashfree';
   submit.firstChild.textContent = online ? 'Pay online ' : 'Place COD order ';
-  paymentCaption.textContent = online ? 'Secure online payment' : 'Cash on delivery';
+  const mode = form.querySelector('input[name="payment"][value="cashfree"]')?.dataset.cashfreeMode;
+  paymentCaption.textContent = online ? (mode === 'sandbox' ? 'TEST PAYMENT — no real money' : 'Secure online payment') : 'Cash on delivery';
 }
 paymentInputs.forEach(input => input.addEventListener('change', updatePaymentChoice));
 
@@ -143,9 +144,14 @@ form.addEventListener('submit', async event => {
     const response = await fetch(form.action, { method: 'POST', body: data });
     const result = await response.json();
     if (!response.ok) throw new Error(result.error || 'Order could not be saved. Try again.');
-    if (result.status === 'payment_pending' && result.payment_session_id) {
+    if (['payment_pending', 'test_pending'].includes(result.status) && result.payment_session_id) {
       if (typeof Cashfree !== 'function') throw new Error('Payment checkout could not load. Please try again.');
-      const gateway = Cashfree({ mode: 'production' });
+      if (!['sandbox', 'production'].includes(result.cashfree_mode)) throw new Error('Payment mode unavailable. Please retry.');
+      if (result.cashfree_mode === 'sandbox') {
+        feedback.textContent = 'Cashfree TEST MODE: no real money will be charged and no order will be shipped.';
+        feedback.hidden = false;
+      }
+      const gateway = Cashfree({ mode: result.cashfree_mode });
       await gateway.checkout({ paymentSessionId: result.payment_session_id, redirectTarget: '_self' });
       return;
     }
