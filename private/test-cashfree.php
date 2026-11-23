@@ -9,11 +9,11 @@ require __DIR__ . '/cashfree.php';
 echo "Cashfree connectivity diagnostic (no charge / no order created)\n";
 try {
     $config = cashfreeConfig();
-    echo "Config: OK (production)\n";
+    echo "Config: OK (" . $config['environment'] . ")\n";
     echo "cURL: " . (function_exists('curl_init') ? 'available' : 'MISSING') . "\n";
     if (!function_exists('curl_init')) exit(2);
     // A deliberately nonexistent order tests authenticated API connectivity without creating a payment.
-    $ch = curl_init('https://api.cashfree.com/pg/orders/HV-DIAGNOSTIC-NONEXISTENT');
+    $ch = curl_init(cashfreeBaseUrl($config['environment']) . 'orders/HV-DIAGNOSTIC-NONEXISTENT');
     curl_setopt_array($ch, [
         CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 20, CURLOPT_CONNECTTIMEOUT => 8,
         CURLOPT_HTTPHEADER => [
