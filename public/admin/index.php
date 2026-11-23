@@ -61,7 +61,7 @@ if ($authenticated) {
 }
 session_write_close();
 
-$statuses = ['cod_confirmed' => 'COD confirmed', 'pending_payment' => 'Payment pending', 'paid' => 'Paid'];
+$statuses = ['cod_confirmed' => 'COD confirmed', 'payment_pending' => 'Payment pending', 'paid' => 'Paid', 'test_pending' => 'Sandbox test pending (do not ship)', 'test_paid' => 'Sandbox test success (do not ship)'];
 $filter = is_string($_GET['status'] ?? null) && isset($statuses[$_GET['status']]) ? $_GET['status'] : '';
 $page = filter_input(INPUT_GET, 'page', FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) ?: 1;
 $perPage = 25;
@@ -157,7 +157,7 @@ function pageUrl(int $page, string $status): string
                             <td><strong><?= escape($order['id']) ?></strong><small><?= escape($order['created_at']) ?></small><small><?= (int) $order['quantity'] ?> × <?= escape($order['product']) ?></small></td>
                             <td><?= escape($order['name']) ?><small><a href="tel:<?= escape($order['phone']) ?>"><?= escape($order['phone']) ?></a></small></td>
                             <td><span class="address"><?= escape($order['address']) ?></span><small><?= escape($order['city']) ?> <?= escape($order['pincode']) ?></small></td>
-                            <td><?= $order['payment'] === 'cod' ? 'Cash on delivery' : 'Online payment (historical)' ?></td>
+                            <td><?= $order['payment'] === 'cod' ? 'Cash on delivery' : ($order['payment'] === 'cashfree_test' ? 'Cashfree SANDBOX (no charge)' : 'Cashfree online') ?></td>
                             <td>₹<?= (int) $order['amount'] ?></td>
                             <td><?= escape($statuses[$order['status']] ?? $order['status']) ?></td>
                         </tr>
