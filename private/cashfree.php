@@ -4,16 +4,25 @@ function cashfreeConfig(): array {
     $path = __DIR__ . '/data/cashfree.json';
     if (!is_readable($path)) throw new RuntimeException('Cashfree configuration missing at private/data/cashfree.json');
     $c = json_decode((string) file_get_contents($path), true);
-    if (!is_array($c) || ($c['environment'] ?? '') !== 'production'
+    if (!is_array($c) || !in_array($c['environment'] ?? null, ['production', 'sandbox'], true)
         || !is_string($c['app_id'] ?? null) || ($c['app_id'] ?? '') === ''
         || !is_string($c['secret_key'] ?? null) || ($c['secret_key'] ?? '') === '') {
-        throw new RuntimeException('Invalid Cashfree production configuration (expected environment=production, app_id, secret_key)');
+        throw new RuntimeException('Invalid Cashfree configuration (expected environment=production or sandbox, app_id, secret_key)');
     }
     return $c;
 }
+function cashfreeEnvironment(): string {
+    return cashfreeConfig()['environment'];
+}
+function cashfreeBaseUrl(string $environment): string {
+    if ($environment === 'sandbox') return 'https://sandbox.cashfree.com/pg/';
+    if ($environment === 'production') return 'https://api.cashfree.com/pg/';
+    throw new RuntimeException('Unknown Cashfree environment');
+}
 function cashfreeRequest(string $method, string $path, ?array $payload = null): array {
     $c = cashfreeConfig();
-    $ch = curl_init('https://api.cashfree.com/pg/' . ltrim($path, '/'));
+    $ch = curl_init(cashfreeBaseUrl($c['environment']) . ltrim($path, '/'));
+    if ($ch === false) throw new RuntimeException('Cashfree cURL initialization failed');
     $headers = ['Content-Type: application/json','Accept: application/json',
         'x-api-version: 2025-01-01','x-client-id: ' . $c['app_id'],
         'x-client-secret: ' . $c['secret_key']];
