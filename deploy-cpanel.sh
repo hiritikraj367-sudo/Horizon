@@ -47,5 +47,6 @@ for legacy_dir in landing-page admin/landing-pages; do
         rm -rf -- "$target"
     fi
 done
-rm -f -- "$document_root/payment.php" "$document_root/webhook.php" "$private_root/cashfree-settings.php"
+# Preserve Cashfree credentials stored outside public_html; never delete payment settings during deployment.
+rm -f -- "$document_root/payment.php" "$document_root/webhook.php"
 printf 'Deployed Home Vexa to %s\n' "$document_root"
