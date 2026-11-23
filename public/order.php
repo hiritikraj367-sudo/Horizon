@@ -1,6 +1,10 @@
 <?php
 declare(strict_types=1);
 
+// Keep raw PHP errors out of the public response; record them in the server error log.
+ini_set('display_errors', '0');
+ini_set('log_errors', '1');
+error_reporting(E_ALL);
 require __DIR__ . '/bootstrap.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -97,8 +101,20 @@ try {
         'confirmation_token' => orderConfirmationToken($order),
     ]);
 } catch (Throwable $e) {
-    $diagnostic = ['stage' => $stage];
-    error_log('Home Vexa checkout failed at ' . $stage . ': ' . get_class($e));
+    $traceId = bin2hex(random_bytes(6));
+    $diagnostic = ['stage' => $stage, 'trace_id' => $traceId];
+    if ($stage === 'cashfree_create') {
+        $message = $e->getMessage();
+        if (str_starts_with($message, 'Cashfree request failed (HTTP ') ||
+            str_starts_with($message, 'Cashfree configuration missing') ||
+            str_starts_with($message, 'Invalid Cashfree production configuration') ||
+            $message === 'Cashfree session not returned') {
+            $diagnostic['reason'] = $message;
+        } else {
+            $diagnostic['reason'] = 'Unexpected gateway error; check PHP error log using trace ID';
+        }
+    }
+    error_log('Home Vexa checkout trace=' . $traceId . ' stage=' . $stage . ' exception=' . get_class($e) . ' message=' . $e->getMessage() . ' file=' . $e->getFile() . ':' . $e->getLine());
     jsonResponse(503, [
         'error' => 'Checkout could not complete. Please try again.',
         'diagnostic' => $diagnostic,
