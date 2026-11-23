@@ -134,7 +134,6 @@ function pageUrl(int $page, string $status): string
             <button name="action" value="login">Sign in</button>
         </form>
     <?php else: ?>
-        <p><a href="./landing-pages/">Manage Landing Pages →</a></p>
         <form method="get" class="filters">
             <label for="status">Payment status</label>
             <select name="status" id="status">
