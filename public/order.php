@@ -30,7 +30,7 @@ $requestId = $input('request_id');
 if ($name === '' || strlen($name) > 300 || $address === '' || strlen($address) > 1500
     || $city === '' || strlen($city) > 300 || !preg_match('/^[0-9]{10}$/D', $phone)
     || !preg_match('/^[0-9]{6}$/D', $pincode) || !preg_match('/^[a-f0-9]{32}$/D', $requestId)
-    || $payment !== 'cod') {
+    || !in_array($payment, ['cod', 'cashfree'], true)) {
     jsonResponse(422, ['error' => 'Check your delivery details, 10-digit mobile number and 6-digit PIN.']);
 }
 try {
@@ -38,7 +38,7 @@ try {
     $db = orderDatabase();
     $stage = 'order_save';
     $id = 'HV-' . bin2hex(random_bytes(12));
-    $status = 'cod_confirmed';
+    $status = $payment === 'cod' ? 'cod_confirmed' : 'payment_pending';
     // Bind retries to the browser session so one checkout cannot retrieve another checkout's result.
     $requestKey = hash_hmac('sha256', $requestId, $token);
     $insert = $db->prepare('INSERT INTO orders
@@ -57,6 +57,32 @@ try {
         if ($order[$field] !== $$field) {
             jsonResponse(409, ['error' => 'This checkout already has an order. Reload to start a new one.']);
         }
+    }
+
+    if ($payment === 'cashfree') {
+        $stage = 'cashfree_create';
+        $session = cashfreeRequest('POST', 'orders', [
+            'order_id' => $order['id'],
+            'order_amount' => (float) $order['amount'],
+            'order_currency' => 'INR',
+            'customer_details' => [
+                'customer_id' => $order['id'],
+                'customer_name' => $order['name'],
+                'customer_phone' => $order['phone'],
+                'customer_email' => $email !== '' ? $email : 'orders@homevexa.online',
+            ],
+            'order_meta' => [
+                'return_url' => 'https://homevexa.online/payment-return.php?order_id=' . rawurlencode($order['id']) . '&access=' . orderConfirmationToken($order),
+            ],
+        ]);
+        if (!is_string($session['payment_session_id'] ?? null) || $session['payment_session_id'] === '') {
+            throw new RuntimeException('Cashfree session not returned');
+        }
+        jsonResponse(200, [
+            'order_id' => $order['id'],
+            'status' => 'payment_pending',
+            'payment_session_id' => $session['payment_session_id'],
+        ]);
     }
 
     // Only the request that inserted this order sends the confirmation.
