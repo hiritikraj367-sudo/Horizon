@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 function cashfreeConfig(): array {
-    $path = dirname(__DIR__) . '/data/cashfree.json';
+    $path = __DIR__ . '/data/cashfree.json';
     if (!is_readable($path)) throw new RuntimeException('Cashfree configuration missing');
     $c = json_decode((string) file_get_contents($path), true);
     if (!is_array($c) || ($c['environment'] ?? '') !== 'production'
