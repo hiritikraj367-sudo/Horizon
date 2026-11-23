@@ -28,4 +28,6 @@ php /home/homevexa/homevexa-private/test-cashfree.php
 
 To return to live, restore your production credentials and change `environment` to `production`; ensure the merchant account is activated and complete real-payment validation before accepting customers. Sandbox payments are not compatible with production verification. Avoid switching while a sandbox checkout is in progress.
 
-**Note:** This integration relies on the browser return URL to reconcile payments; a verified Cashfree webhook is not yet implemented and must be added before relying on unattended production payments.
+**Server-to-server webhook:** New orders include `notify_url: https://homevexa.online/cashfree-webhook.php`. That endpoint verifies the `x-webhook-signature` HMAC over the timestamp + raw request body, then checks the order ID, currency, amount and PAID status with Cashfree's server-side API before updating MySQL. It handles duplicate notifications idempotently. Configure the webhook in the corresponding Cashfree dashboard environment as needed and test real sandbox notifications before going live.
+
+**Go-live gates:** Automated tests use a mocked gateway, not real Cashfree. Complete a real sandbox success, failure, customer-closed-browser webhook, retry, and admin verification before switching credentials to production. Confirm merchant activation/domain allowlisting and plan for failed/pending-payment reconciliation before handling real orders.
