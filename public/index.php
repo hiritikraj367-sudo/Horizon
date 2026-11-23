@@ -4,6 +4,11 @@ require __DIR__ . '/bootstrap.php';
 startCheckout();
 header('Cache-Control: no-store');
 $_SESSION['checkout_token'] ??= bin2hex(random_bytes(32));
+try {
+    $cashfreeCheckoutMode = cashfreeEnvironment();
+} catch (Throwable $e) {
+    $cashfreeCheckoutMode = 'unavailable';
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -632,7 +637,7 @@ Phone: <a href="tel:+918789913840">+91 8789913840</a>
 <label class="he-field">PIN code<input inputMode="numeric" autoComplete="postal-code" placeholder="6-digit PIN" pattern="[0-9]{6}" maxLength="6" required="" name="pincode"/>
 </label>
 </div>
-<fieldset class="he-payment-options" style="border:1px solid #dfe3d7;border-radius:10px;padding:12px;margin:14px 0"><legend>Payment method</legend><label style="display:block;margin:8px 0"><input type="radio" name="payment" value="cod" checked> Cash on delivery</label><label style="display:block;margin:8px 0"><input type="radio" name="payment" value="cashfree"> Pay online securely (Cashfree)</label></fieldset><div class="he-form-total">
+<fieldset class="he-payment-options" style="border:1px solid #dfe3d7;border-radius:10px;padding:12px;margin:14px 0"><legend>Payment method</legend><label style="display:block;margin:8px 0"><input type="radio" name="payment" value="cod" checked> Cash on delivery</label><label style="display:block;margin:8px 0"><input type="radio" name="payment" value="cashfree" data-cashfree-mode="<?= escape($cashfreeCheckoutMode) ?>" <?= $cashfreeCheckoutMode === "unavailable" ? "disabled" : "" ?>> <?= $cashfreeCheckoutMode === "sandbox" ? "Cashfree TEST payment (no real money)" : ($cashfreeCheckoutMode === "unavailable" ? "Online payment temporarily unavailable" : "Pay online securely (Cashfree)") ?></label><?php if ($cashfreeCheckoutMode === "sandbox"): ?><p role="note" style="margin:8px 0;color:#854d0e;font-weight:700">Sandbox testing only — no real money is charged and test orders will not be delivered.</p><?php endif ?></fieldset><div class="he-form-total">
   <div>
     <span>Total to pay</span>
     <small id="he-payment-caption">Cash on delivery</small>
