@@ -9,16 +9,24 @@ $access = is_string($_GET['access'] ?? null) ? $_GET['access'] : '';
 $message = 'We could not verify your payment yet. Please contact support with your order ID.';
 try {
     $order = orderById($id);
-    if (!$order || $order['payment'] !== 'cashfree' || !hash_equals(orderConfirmationToken($order), $access)) {
+    if (!$order || !in_array($order['payment'], ['cashfree', 'cashfree_test'], true) || !hash_equals(orderConfirmationToken($order), $access)) {
         http_response_code(404);
         throw new RuntimeException('Unknown payment reference');
+    }
+    $isTest = $order['payment'] === 'cashfree_test';
+    if (cashfreeEnvironment() !== ($isTest ? 'sandbox' : 'production')) {
+        throw new RuntimeException('Cashfree environment changed before order verification');
     }
     $payment = cashfreeRequest('GET', 'orders/' . rawurlencode($id));
     if (($payment['order_status'] ?? '') === 'PAID'
         && ($payment['order_id'] ?? '') === $id
         && ($payment['order_currency'] ?? '') === 'INR'
         && abs((float) ($payment['order_amount'] ?? 0) - (float) $order['amount']) < 0.001) {
-        $stmt = orderDatabase()->prepare("UPDATE orders SET status = 'paid', paid_at = COALESCE(paid_at, UTC_TIMESTAMP()) WHERE id = ? AND payment = 'cashfree' AND status = 'payment_pending'");
+        if ($isTest) {
+            $stmt = orderDatabase()->prepare("UPDATE orders SET status = 'test_paid' WHERE id = ? AND payment = 'cashfree_test' AND status = 'test_pending'");
+        } else {
+            $stmt = orderDatabase()->prepare("UPDATE orders SET status = 'paid', paid_at = COALESCE(paid_at, UTC_TIMESTAMP()) WHERE id = ? AND payment = 'cashfree' AND status = 'payment_pending'");
+        }
         $stmt->execute([$id]);
         header('Location: ./thank-you.php?' . http_build_query(['order_id' => $id, 'access' => $access]), true, 303);
         exit;
