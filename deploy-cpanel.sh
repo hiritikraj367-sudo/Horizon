@@ -16,7 +16,7 @@ if [[ "$(realpath "$document_root")" != "$(realpath "$account_home")/public_html
 fi
 
 install -d -m 0700 "$private_root"
-install -m 0600 "$repo/private/store.php" "$repo/private/cashfree.php" "$repo/private/order-confirmation-email.php" "$repo/private/set-admin-hash.php" "$private_root/"
+install -m 0600 "$repo/private/store.php" "$repo/private/cashfree.php" "$repo/private/order-confirmation-email.php" "$repo/private/set-admin-hash.php" "$repo/private/test-cashfree.php" "$private_root/"
 
 install -m 0700 "$repo/private/set-admin-password.sh" "$private_root/"
 
