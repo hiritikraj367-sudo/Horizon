@@ -143,7 +143,20 @@ form.addEventListener('submit', async event => {
     const data = new FormData(form);
     const response = await fetch(form.action, { method: 'POST', body: data });
     const result = await response.json();
-    if (!response.ok) throw new Error(result.error || 'Order could not be saved. Try again.');
+    if (!response.ok) {
+      if (response.status === 409 && result.code === 'checkout_changed') {
+        // A previously saved order is bound to the old request ID. Do not
+        // silently create another order; require an explicit second click.
+        const requestField = form.querySelector('input[name="request_id"]');
+        const bytes = new Uint8Array(16);
+        crypto.getRandomValues(bytes);
+        requestField.value = [...bytes].map(byte => byte.toString(16).padStart(2, '0')).join('');
+        throw new Error('Your checkout has been reset for a new attempt. Review your details and click the payment button again.');
+      }
+      const reason = result.diagnostic?.reason;
+      throw new Error((result.error || 'Order could not be saved. Try again.') +
+        (typeof reason === 'string' ? ' (' + reason + ')' : ''));
+    }
     if (['payment_pending', 'test_pending'].includes(result.status) && result.payment_session_id) {
       if (typeof Cashfree !== 'function') throw new Error('Payment checkout could not load. Please try again.');
       if (!['sandbox', 'production'].includes(result.cashfree_mode)) throw new Error('Payment mode unavailable. Please retry.');
