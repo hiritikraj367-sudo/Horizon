@@ -23,6 +23,7 @@ $_SESSION['checkout_token'] ??= bin2hex(random_bytes(32));
 <link rel="stylesheet" href="./assets/checkout.css?v=<?= filemtime(__DIR__ . '/assets/checkout.css') ?>">
 <script src="./assets/store.js?v=<?= filemtime(__DIR__ . '/assets/store.js') ?>" defer>
 </script>
+<script src="https://sdk.cashfree.com/js/v3/cashfree.js" defer></script>
 </head>
 <body class="antialiased">
 <div hidden="">
