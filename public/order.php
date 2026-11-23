@@ -73,7 +73,13 @@ try {
 
     if ($payment === 'cashfree') {
         $stage = 'cashfree_create';
-        $session = $order['id'] !== $id ? cashfreeRequest('GET', 'orders/' . rawurlencode($order['id'])) : cashfreeRequest('POST', 'orders', [
+        if (!in_array($order['status'], ['payment_pending', 'test_pending'], true)) {
+            jsonResponse(409, [
+                'error' => 'This payment attempt has already been completed. Open a new checkout to place another order.',
+                'code' => 'checkout_changed',
+            ]);
+        }
+        $cashfreePayload = [
             'order_id' => $order['id'],
             'order_amount' => (float) $order['amount'],
             'order_currency' => 'INR',
@@ -86,7 +92,21 @@ try {
             'order_meta' => [
                 'return_url' => 'https://homevexa.online/payment-return.php?order_id=' . rawurlencode($order['id']) . '&access=' . orderConfirmationToken($order),
             ],
-        ]);
+        ];
+        if ($order['id'] === $id) {
+            $session = cashfreeRequest('POST', 'orders', $cashfreePayload);
+        } else {
+            try {
+                $session = cashfreeRequest('GET', 'orders/' . rawurlencode($order['id']));
+            } catch (RuntimeException $e) {
+                // If DB insertion succeeded but Cashfree creation failed earlier,
+                // retry creation with the SAME order ID. Never create a second DB order.
+                if (!str_starts_with($e->getMessage(), 'Cashfree request failed (HTTP 404,')) {
+                    throw $e;
+                }
+                $session = cashfreeRequest('POST', 'orders', $cashfreePayload);
+            }
+        }
         if (!is_string($session['payment_session_id'] ?? null) || $session['payment_session_id'] === '') {
             throw new RuntimeException('Cashfree session not returned');
         }
