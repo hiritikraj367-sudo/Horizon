@@ -31,22 +31,5 @@ require dirname(__DIR__) . '/homevexa-private/store.php';
 PHP
 cp -R "$stage/." "$document_root/"
 
-# Remove only legacy dynamic landing-page artifacts from public_html.
-# Do not remove unrelated content or follow directory symlinks.
-for legacy_file in landing.php landing-product.php landing-order.php assets/landing-store.js; do
-    target="$document_root/$legacy_file"
-    if [[ -f "$target" || -L "$target" ]]; then
-        rm -f -- "$target"
-    fi
-done
-for legacy_dir in landing-page admin/landing-pages; do
-    target="$document_root/$legacy_dir"
-    if [[ -L "$target" ]]; then
-        rm -f -- "$target"
-    elif [[ -d "$target" ]]; then
-        rm -rf -- "$target"
-    fi
-done
-# Preserve Cashfree credentials stored outside public_html; never delete payment settings during deployment.
 rm -f -- "$document_root/payment.php" "$document_root/webhook.php"
 printf 'Deployed Home Vexa to %s\n' "$document_root"
