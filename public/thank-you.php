@@ -14,13 +14,15 @@ $deliveryWindow = '';
 $message = 'A confirmed order could not be found.';
 try {
     $candidate = orderById($id);
-    if ($candidate && in_array($candidate['status'], ['cod_confirmed', 'paid'], true)) {
+    if ($candidate && in_array($candidate['status'], ['cod_confirmed', 'paid', 'test_paid'], true)) {
         $deliveryWindow = orderDeliveryWindow($candidate);
         $showDeliveryAddress = hash_equals(orderConfirmationToken($candidate), $access);
         $order = $candidate;
-        $message = $order['status'] === 'cod_confirmed'
-            ? 'Your order is confirmed. You can pay when it arrives.'
-            : 'Your payment is confirmed and your order has been placed.';
+        $message = $order['status'] === 'test_paid'
+            ? 'Cashfree sandbox test successful. No real money was charged. This is NOT a real order and will not be shipped.'
+            : ($order['status'] === 'cod_confirmed'
+                ? 'Your order is confirmed. You can pay when it arrives.'
+                : 'Your payment is confirmed and your order has been placed.');
     } else {
         http_response_code(404);
     }
@@ -29,7 +31,8 @@ try {
     $message = 'Order confirmation is temporarily unavailable. Refresh this page to retry.';
 }
 
-$title = $order ? 'Thank you for your order!' : 'Order confirmation';
+$title = $order ? ($order['status'] === 'test_paid' ? 'Test payment completed' : 'Thank you for your order!') : 'Order confirmation';
+$isTest = $order && $order['status'] === 'test_paid';
 $isPaid = $order && $order['status'] === 'paid';
 ?>
 <!doctype html>
@@ -100,14 +103,16 @@ $isPaid = $order && $order['status'] === 'paid';
                     </div>
                     <div>
                         <dt>Payment</dt>
-                        <dd><?= $isPaid ? 'Paid online' : 'Cash on delivery' ?></dd>
+                        <dd><?= $isTest ? 'Sandbox only (no real charge)' : ($isPaid ? 'Paid online' : 'Cash on delivery') ?></dd>
                     </div>
+                    <?php if (!$isTest): ?>
                     <div>
                         <dt>Estimated delivery</dt>
                         <dd><?= escape($deliveryWindow) ?> (3–5 days)</dd>
                     </div>
+                    <?php endif ?>
                 </dl>
-                <?php if ($showDeliveryAddress): ?>
+                <?php if ($showDeliveryAddress && !$isTest): ?>
                     <div class="he-confirmation-address">
                         <h2>Delivery address</h2>
                         <address>
