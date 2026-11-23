@@ -60,9 +60,14 @@ try {
     if (!$order) {
         throw new RuntimeException('Order could not be retrieved');
     }
-    foreach (['name', 'phone', 'address', 'city', 'pincode', 'payment'] as $field) {
-        if ($order[$field] !== ($field === 'payment' ? $storedPayment : $field)) {
-            jsonResponse(409, ['error' => 'This checkout already has an order. Reload to start a new one.']);
+    $submitted = compact('name', 'phone', 'address', 'city', 'pincode');
+    $submitted['payment'] = $storedPayment;
+    foreach ($submitted as $field => $value) {
+        if (!hash_equals((string) $order[$field], (string) $value)) {
+            jsonResponse(409, [
+                'error' => 'Checkout details changed after the previous attempt. Please try again.',
+                'code' => 'checkout_changed',
+            ]);
         }
     }
 
